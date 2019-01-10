@@ -40,7 +40,7 @@ logging.basicConfig(level=logging.INFO)
     '--batch-size', '-bs', default=128,
     help='Train batch size')
 @ck.option(
-    '--epochs', '-es', default=12,
+    '--epochs', '-es', default=128,
     help='Train epochs')
 def main(data_file, proteins_file, model_file, logger_file, load,
          batch_size, epochs):
@@ -143,7 +143,7 @@ def create_model():
 
 def load_data(data_file, split=0.8):
     df = pd.read_pickle(data_file)
-    n = 1000000 # len(df)
+    n = len(df)
 
     # Split train/valid/test
     index = np.arange(n)
