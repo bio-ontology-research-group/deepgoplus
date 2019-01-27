@@ -1,3 +1,5 @@
+import numpy as np
+
 AALETTER = [
     'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
     'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
@@ -22,8 +24,17 @@ def is_ok(seq):
     return True
 
 def to_ngrams(seq):
-    ngrams = list()
-    for i in range(min(MAXLEN, len(seq) - 3)):
-        ngrams.append(NGRAMS.get(seq[i: i + 3], 0))
+    l = min(MAXLEN, len(seq) - 3)
+    ngrams = np.zeros((l,), dtype=np.int32)
+    for i in range(l):
+        ngrams[i] = NGRAMS.get(seq[i: i + 3], 0)
     return ngrams
 
+def to_onehot(seq):
+    onehot = np.zeros((MAXLEN, 21), dtype=np.int32)
+    l = min(MAXLEN, len(seq))
+    for i in range(l):
+        onehot[i, AAINDEX.get(seq[i], 0)] = 1
+    if l < onehot.shape[0]:
+        onehot[l:, 0] = 1
+    return onehot

@@ -3,8 +3,10 @@
 import click as ck
 import numpy as np
 import pandas as pd
+import logging
+from utils import Ontology, FUNC_DICT
 
-from utils import GeneOntology, FUNC_DICT
+logging.basicConfig(level=logging.INFO)
 
 @ck.command()
 @ck.option(
@@ -16,21 +18,68 @@ from utils import GeneOntology, FUNC_DICT
 @ck.option(
     '--pred-file', '-pf', default='data/predictions.pkl',
     help='GO subontology (mf, bp, cc)')
-def main(go_file, ont, pred_file):
-    go = GeneOntology(go_file, with_rels=False)
+@ck.option(
+    '--mapping-file', '-mpf', default='data/mappings.txt',
+    help='Definition mapping file')
+@ck.option(
+    '--terms-file', '-tf', default='data/terms.pkl',
+    help='Data file with sequences and complete set of annotations')
+@ck.option(
+    '--threshold', '-th', default=0.3,
+    help='Prediction threshold')
+def main(go_file, ont, pred_file, mapping_file, terms_file, threshold):
+    go = Ontology(go_file, with_rels=False)
 
-    # go_set = go.get_go_set(FUNC_DICT[ont])        
+    terms_df = pd.read_pickle(terms_file)
+    terms = terms_df['terms'].values.flatten()
+    terms_dict = {v: i for i, v in enumerate(terms)}
+
+    # go_set = go.get_term_set(FUNC_DICT[ont])        
     deepgo_funcs = pd.read_pickle('data/deepgo/' + ont + '.pkl')['functions'].values
     go_set = set(deepgo_funcs.flatten())
     print(len(go_set))
     df = pd.read_pickle(pred_file)
 
+    # Extend predictions using mapping
+    mapping = {}
+    with open(mapping_file, 'r') as f:
+        for line in f:
+            it = line.strip().split('\t')
+            it = list(map(lambda x: x.replace('_', ':'), it))
+            mapping[it[0]] = it[1:]
+
+    logging.info('Number of definitions: %d' % len(mapping))
+    predicted_annotations = list()
+    preds = df['preds'].values
+    for i in range(preds.shape[0]):
+        annots = set()
+        for j in range(len(preds[i])):
+            if preds[i][j] >= threshold and terms[j].startswith('GO'):
+                annots.add(terms[j])
+        # for t_id, items in mapping.items():
+        #     ok = True
+        #     for it in items:
+        #         if it not in terms_dict or preds[i][terms_dict[it]] == 0:
+        #             ok = False
+        #             break
+        #     if ok:
+        #         annots.add(t_id)
+        # propagate annotations
+        # new_annots = set()
+        # for go_id in annots:
+        #     new_annots |= go.get_anchestors(go_id)
+        # new_annots -= set(FUNC_DICT.values())
+        predicted_annotations.append(annots)
+
+    f_annots = compute_fscore_annotations(df['annotations'].values, predicted_annotations)
+    logging.info('F score after expanding: %.2f' % f_annots)
+    
     # Filter classes
     annots = list(map(lambda x: set(filter(lambda y: y in go_set, x)), df['annotations']))
     annots_set = set()
     for ann in annots:
         annots_set |= ann
-    preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), df['predicted_annotations']))
+    preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), predicted_annotations))
     preds_set = set()
     for ann in preds:
         preds_set |= ann

@@ -17,7 +17,7 @@ import gzip
 def main(string_db_file, out_file, mapping_file):
     mapping = dict()
     size = 0
-    rf = open(out_file, 'w')
+    # rf = open(out_file, 'w')
 
     # Reading interactions data
     edge = 0
@@ -44,15 +44,14 @@ def main(string_db_file, out_file, mapping_file):
             id2 = str(mapping[p2])
             id3 = str(mapping[inter])
             edge += 1
-            rf.write(id1 + ' ' + id2 + ' ' + id3 + '\n')
-            rf.write(id2 + ' ' + id1 + ' ' + id3 + '\n')
+            # rf.write(id1 + ' ' + id2 + ' ' + id3 + '\n')
+            # rf.write(id2 + ' ' + id1 + ' ' + id3 + '\n')
 
-    print('Nodes', (len(mapping) - edge_types))
-
-    rf.close()
+    
+    # rf.close()
 
     with open(mapping_file, 'w') as f:
-        for key, value in mapping.iteritems():
+        for key, value in mapping.items():
             f.write(key + '\t' + str(value) + '\n')
 
 

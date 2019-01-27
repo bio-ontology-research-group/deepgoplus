@@ -25,7 +25,7 @@ def main(string_db_file, sequences_file):
         for line in f:
             it = line.strip().split()
             score = int(it[2])
-            if score < 700:
+            if score < 300:
                 continue
             if it[0] not in mapping:
                 mapping[it[0]] = len(mapping)
@@ -33,12 +33,12 @@ def main(string_db_file, sequences_file):
                 mapping[it[1]] = len(mapping)
             p1 = mapping[it[0]]
             p2 = mapping[it[1]]
-            data.append((p1, p2))
+            # data.append((p1, p2))
 
     # Save data
-    df = pd.DataFrame({'data': data})
-    df.to_pickle('data/string/data.pkl')
-    print('Saved interactions data')
+    # df = pd.DataFrame({'data': data})
+    # df.to_pickle('data/string/data.pkl')
+    # print('Saved interactions data')
 
     # Read sequences
     seqs = list()
@@ -46,29 +46,34 @@ def main(string_db_file, sequences_file):
     mappings = []
     seq = ''
     p_id = ''
+    w = open('data/string/protein.sequences.v10.5.fa', 'w')
     with gzip.open(sequences_file, 'rt') as f:
         for line in f:
             line = line.strip()
             if line.startswith('>'):
                 if seq != '':
                     if p_id in mapping:
-                        seqs.append(to_ngrams(seq))
-                        proteins.append(p_id)
-                        mappings.append(mapping[p_id])
+                        # seqs.append(to_ngrams(seq))
+                        # proteins.append(p_id)
+                        # mappings.append(mapping[p_id])
+                        w.write('>' + p_id + '\n')
+                        w.write(seq + '\n')
                     seq = ''
                 space_ind = line.find(' ')
                 p_id = line[1:space_ind]
             else:
                 seq += line
     if p_id in mapping:
-        seqs.append(to_ngrams(seq))
-        proteins.append(p_id)
-        mappings.append(mapping[p_id])
+        # seqs.append(to_ngrams(seq))
+        # proteins.append(p_id)
+        # mappings.append(mapping[p_id])
+        w.write('>' + p_id + '\n')
+        w.write(seq + '\n')
 
     # Save sequence data
-    df = pd.DataFrame({'proteins': proteins, 'sequences': seqs, 'mappings': mappings})
-    df.to_pickle('data/string/proteins.pkl')
-
+    # df = pd.DataFrame({'proteins': proteins, 'sequences': seqs, 'mappings': mappings})
+    # df.to_pickle('data/string/proteins.pkl')
+    w.close()
     print('Saved proteins data')
 
     
