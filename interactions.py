@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO)
     '--load', '-ld', is_flag=True,
     help='Load model?')
 @ck.option(
-    '--batch-size', '-bs', default=128,
+    '--batch-size', '-bs', default=512,
     help='Train batch size')
 @ck.option(
     '--epochs', '-es', default=128,
@@ -143,7 +143,7 @@ def create_model():
 
 def load_data(data_file, split=0.8):
     df = pd.read_pickle(data_file)
-    n = len(df)
+    n = 10000000 #len(df)
 
     # Split train/valid/test
     index = np.arange(n)

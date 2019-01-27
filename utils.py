@@ -12,24 +12,33 @@ FUNC_DICT = {
     'mf': MOLECULAR_FUNCTION,
     'bp': BIOLOGICAL_PROCESS}
 
-EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC'])
+EXP_CODES = set([
+    'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC',
+    'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
+CAFA_TARGETS = set([
+    '10090', '223283', '273057', '559292', '85962',
+    '10116',  '224308', '284812', '7227', '9606',
+    '160488', '237561', '321314', '7955', '99287',
+    '170187', '243232', '3702', '83333', '208963',
+    '243273', '44689', '8355'])
 
+def is_cafa_target(org):
+    return org in CAFA_TARGETS
 
 def is_exp_code(code):
     return code in EXP_CODES
 
 
-class GeneOntology(object):
+class Ontology(object):
 
     def __init__(self, filename='data/go.obo', with_rels=False):
-        self.go = self.load(filename, with_rels)
+        self.ont = self.load(filename, with_rels)
 
-    def has_term(self, go_id):
-        return go_id in self.go
+    def has_term(self, term_id):
+        return term_id in self.ont
 
     def load(self, filename, with_rels):
-        # Reading Gene Ontology from OBO Formatted file
-        go = dict()
+        ont = dict()
         obj = None
         with open(filename, 'r') as f:
             for line in f:
@@ -38,7 +47,7 @@ class GeneOntology(object):
                     continue
                 if line == '[Term]':
                     if obj is not None:
-                        go[obj['id']] = obj
+                        ont[obj['id']] = obj
                     obj = dict()
                     obj['is_a'] = list()
                     obj['part_of'] = list()
@@ -67,62 +76,62 @@ class GeneOntology(object):
                     elif l[0] == 'is_obsolete' and l[1] == 'true':
                         obj['is_obsolete'] = True
         if obj is not None:
-            go[obj['id']] = obj
-        for go_id in list(go.keys()):
-            for g_id in go[go_id]['alt_ids']:
-                go[g_id] = go[go_id]
-            if go[go_id]['is_obsolete']:
-                del go[go_id]
-        for go_id, val in go.items():
+            ont[obj['id']] = obj
+        for term_id in list(ont.keys()):
+            for t_id in ont[term_id]['alt_ids']:
+                ont[t_id] = ont[term_id]
+            if ont[term_id]['is_obsolete']:
+                del ont[term_id]
+        for term_id, val in ont.items():
             if 'children' not in val:
                 val['children'] = set()
             for p_id in val['is_a']:
-                if p_id in go:
-                    if 'children' not in go[p_id]:
-                        go[p_id]['children'] = set()
-                    go[p_id]['children'].add(go_id)
-        return go
+                if p_id in ont:
+                    if 'children' not in ont[p_id]:
+                        ont[p_id]['children'] = set()
+                    ont[p_id]['children'].add(term_id)
+        return ont
 
 
-    def get_anchestors(self, go_id):
-        if go_id not in self.go:
+    def get_anchestors(self, term_id):
+        if term_id not in self.ont:
             return set()
-        go_set = set()
+        term_set = set()
         q = deque()
-        q.append(go_id)
+        q.append(term_id)
         while(len(q) > 0):
-            g_id = q.popleft()
-            if g_id not in go_set:
-                go_set.add(g_id)
-                for parent_id in self.go[g_id]['is_a']:
-                    if parent_id in self.go:
+            t_id = q.popleft()
+            if t_id not in term_set:
+                term_set.add(t_id)
+                for parent_id in self.ont[t_id]['is_a']:
+                    if parent_id in self.ont:
                         q.append(parent_id)
-        return go_set
+        return term_set
 
 
-    def get_parents(self, go_id):
-        if go_id not in self.go:
+    def get_parents(self, term_id):
+        if term_id not in self.ont:
             return set()
-        go_set = set()
-        for parent_id in self.go[go_id]['is_a']:
-            if parent_id in self.go:
-                go_set.add(parent_id)
-        return go_set
+        term_set = set()
+        for parent_id in self.ont[term_id]['is_a']:
+            if parent_id in self.ont:
+                term_set.add(parent_id)
+        return term_set
 
 
-    def get_go_set(self, go_id):
-        if go_id not in self.go:
+    def get_term_set(self, term_id):
+        if term_id not in self.ont:
             return set()
-        go_set = set()
+        term_set = set()
         q = deque()
-        q.append(go_id)
+        q.append(term_id)
         while len(q) > 0:
-            g_id = q.popleft()
-            if g_id not in go_set:
-                go_set.add(g_id)
-                for ch_id in self.go[g_id]['children']:
+            t_id = q.popleft()
+            if t_id not in term_set:
+                term_set.add(t_id)
+                for ch_id in self.ont[t_id]['children']:
                     q.append(ch_id)
-        return go_set
+        return term_set
 
 def read_fasta(lines):
     seqs = list()
