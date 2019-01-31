@@ -394,7 +394,7 @@ class DFGenerator(object):
                     if t_id in self.terms_dict:
                         labels[i, self.terms_dict[t_id]] = 1
             self.start += self.batch_size
-            return ([data_onehot, data_net, data_ipros], labels)
+            return (data_onehot, labels)
         else:
             self.reset()
             return self.next()
