@@ -298,8 +298,8 @@ def create_model(int_model_file, ipro_model_file, nb_classes, nb_ipros):
         flat = Flatten()(pool)
         nets.append(flat)
 
-    nets.append(inp_net)
-    nets.append(inp_ipros)
+    # nets.append(inp_net)
+    # nets.append(inp_ipros)
     net = Concatenate(axis=1)(nets)
     net = Dense(
         nb_classes,
@@ -308,7 +308,7 @@ def create_model(int_model_file, ipro_model_file, nb_classes, nb_ipros):
     # net = Dropout(0.5)(net)
     output = Dense(nb_classes, activation='sigmoid', name='dense_out')(net)
 
-    model = Model(inputs=[inp_hot, inp_net, inp_ipros], outputs=output)
+    model = Model(inputs=inp_hot, outputs=output)
     model.summary()
     model.compile(
         optimizer='rmsprop',
