@@ -6,7 +6,7 @@ import pandas as pd
 @ck.command()
 def main():
     defs = {}
-    with open('data/go_corpus.txt') as f:
+    with open('data/go_corpus_all.txt') as f:
         for line in f:
             it = line.strip().split(': ')
             defs[it[0]] = it[1].split(' and ')

@@ -17,26 +17,27 @@ logging.basicConfig(level=logging.INFO)
     help='GO subontology (mf, bp, cc)')
 @ck.option(
     '--pred-file', '-pf', default='data/predictions.pkl',
-    help='GO subontology (mf, bp, cc)')
+    help='predictions file')
 @ck.option(
-    '--mapping-file', '-mpf', default='data/mappings.txt',
+    '--mapping-file', '-mpf', default='data/go_mappings.txt',
     help='Definition mapping file')
 @ck.option(
     '--terms-file', '-tf', default='data/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--threshold', '-th', default=0.3,
+    '--threshold', '-th', default=0.5,
     help='Prediction threshold')
 def main(go_file, ont, pred_file, mapping_file, terms_file, threshold):
     go = Ontology(go_file, with_rels=False)
+    go_rels = Ontology(go_file, with_rels=True)
 
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
 
-    # go_set = go.get_term_set(FUNC_DICT[ont])        
+    go_set = go.get_term_set(FUNC_DICT[ont])        
     deepgo_funcs = pd.read_pickle('data/deepgo/' + ont + '.pkl')['functions'].values
-    go_set = set(deepgo_funcs.flatten())
+    # go_set = set(deepgo_funcs.flatten())
     print(len(go_set))
     df = pd.read_pickle(pred_file)
 
@@ -56,19 +57,18 @@ def main(go_file, ont, pred_file, mapping_file, terms_file, threshold):
         for j in range(len(preds[i])):
             if preds[i][j] >= threshold and terms[j].startswith('GO'):
                 annots.add(terms[j])
-        # for t_id, items in mapping.items():
-        #     ok = True
-        #     for it in items:
-        #         if it not in terms_dict or preds[i][terms_dict[it]] == 0:
-        #             ok = False
-        #             break
-        #     if ok:
-        #         annots.add(t_id)
+        for t_id, items in mapping.items():
+            ok = True
+            for it in items:
+                if it not in terms_dict or preds[i][terms_dict[it]] < threshold:
+                    ok = False
+                    break
+            if ok:
+                annots.add(t_id)
         # propagate annotations
-        # new_annots = set()
-        # for go_id in annots:
-        #     new_annots |= go.get_anchestors(go_id)
-        # new_annots -= set(FUNC_DICT.values())
+        new_annots = set()
+        for go_id in annots:
+            new_annots |= go_rels.get_anchestors(go_id)
         predicted_annotations.append(annots)
 
     f_annots = compute_fscore_annotations(df['annotations'].values, predicted_annotations)

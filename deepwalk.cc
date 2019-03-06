@@ -78,13 +78,13 @@ void walk(unsigned int source) {
 		    Edge next = graph[current][r] ;
 		    int target = next.node ;
 		    int edge = next.edge ;
-		    // walks[i].push_back(edge) ;
+		    walks[i].push_back(edge) ;
 		    walks[i].push_back(target) ;
 		    current = target ;
 		} else {
 		    int edge = INT_MAX ; // null edge
 		    current = source ;
-		    // walks[i].push_back(edge) ;
+		    walks[i].push_back(edge) ;
 		    walks[i].push_back(current) ;
 		}
 		count-- ;

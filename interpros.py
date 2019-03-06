@@ -11,7 +11,7 @@ from tensorflow.keras.models import Sequential, Model, load_model
 from tensorflow.keras.layers import (
     Dense, Dropout, Activation, Input, Reshape,
     Flatten, BatchNormalization, Embedding,
-    Conv2D, MaxPooling2D, Add, Concatenate)
+    Conv1D, MaxPooling1D, Add, Concatenate)
 from tensorflow.keras.optimizers import Adam, RMSprop, Adadelta, SGD
 from sklearn.metrics import classification_report
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -85,24 +85,64 @@ def load_data(split=0.8, shuffle=True):
     valid_df = df.iloc[index[valid_n:train_n]]
     test_df = df.iloc[index[train_n:]]
     
-    return train_df, valid_df, test_df
+    # augment training data
+    def augment_df(df, n):
+        starts = list()
+        reverse = list()
+        seqids = list()
+        sequences = {}
+        ipros = {}
+        for i, row in enumerate(df.itertuples()):
+            sequences[i] = row.sequences
+            ipros[i] = row.interpros
+            seq_len = (row.sequences)
+            m = min(n, max(1, MAXLEN - len(row.sequences)))
+            for j in range(m):
+                start = np.random.choice(max(1, MAXLEN - len(row.sequences)))
+                rev = np.random.choice([True, False])
+                starts.append(start)
+                reverse.append(rev)
+                seqids.append(i)
+            if n == 0:
+                starts.append(0)
+                reverse.append(False)
+                seqids.append(i)
+
+        starts = np.array(starts)
+        reverse = np.array(reverse)
+        seqids = np.array(seqids)
+        # Shuffle
+        index = np.arange(len(seqids))
+        np.random.seed(seed=0)
+        np.random.shuffle(index)
+        starts = starts[index]
+        reverse = reverse[index]
+        seqids = seqids[index]
+        
+        return sequences, ipros, starts, reverse, seqids
+
+    train = augment_df(train_df, 10)
+    valid = augment_df(valid_df, 0)
+    test = augment_df(test_df, 10)
+    
+    return train, valid, test
 
 
 def get_model():
-    input_seq = Input(shape=(MAXLEN, 21, 1), dtype='float32', name='sequence')
+    input_seq = Input(shape=(MAXLEN, 21), dtype='float32', name='sequence')
     kernels = list(range(8, 129, 8))
     nets = []
     for i in range(len(kernels)):
-        conv = Conv2D(
-            filters=512,
-            kernel_size=(kernels[i], 21),
+        conv = Conv1D(
+            filters=32,
+            kernel_size=kernels[i],
             padding='valid',
             name='ipro_conv_' + str(i),
             activation='relu',
             kernel_initializer='glorot_normal')(input_seq)
         print(conv.get_shape())
-        pool = MaxPooling2D(
-            pool_size=(MAXLEN - kernels[i] + 1, 1), name='ipro_pool_' + str(i))(conv)
+        pool = MaxPooling1D(
+            pool_size=MAXLEN - kernels[i] + 1, name='ipro_pool_' + str(i))(conv)
         flat = Flatten(name='ipro_flat_' + str(i))(pool)
         nets.append(flat)
     net = Concatenate(axis=1)(nets)
@@ -110,7 +150,7 @@ def get_model():
     
     model = Model(input_seq, output)
     model.summary()
-    model.compile(optimizer='adam', loss='binary_crossentropy')
+    model.compile(optimizer='rmsprop', loss='binary_crossentropy')
     return model
 
 
@@ -129,8 +169,8 @@ def train_model(train_df, valid_df, batch_size, epochs, model_file):
 
     train_generator = DFGenerator(train_df, interpro_ix, batch_size)
     valid_generator = DFGenerator(valid_df, interpro_ix, batch_size)
-    valid_steps = int(math.ceil(len(valid_df) / batch_size))
-    train_steps = int(math.ceil(len(train_df) / batch_size))
+    valid_steps = int(math.ceil(valid_generator.size / batch_size))
+    train_steps = int(math.ceil(train_generator.size / batch_size))
     model = get_model()
     model.fit_generator(
         train_generator,
@@ -145,19 +185,20 @@ def train_model(train_df, valid_df, batch_size, epochs, model_file):
 
 def test_model(test_df, batch_size, model_file):
     test_generator = DFGenerator(test_df, interpro_ix, batch_size)
-    
+    sequences, ipros, starts, reverse, seqids = test_df
+        
     logging.info('Loading best model')
     model = load_model(model_file)
     
     logging.info('Predicting')
-    test_steps = int(math.ceil(len(test_df) / batch_size))
+    test_steps = int(math.ceil(len(seqids) / batch_size))
     preds = model.predict_generator(
         test_generator, steps=test_steps, verbose=1)
 
     logging.info('Computing performance')
-    test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
-    for i, row in enumerate(test_df.itertuples()):
-        for ipro in row.interpros:
+    test_labels = np.zeros((len(seqids), nb_classes), dtype=np.int32)
+    for i, j in enumerate(seqids):
+        for ipro in ipros[j]:
             if ipro in interpro_ix:
                 test_labels[i, interpro_ix[ipro]] = 1
     
@@ -234,8 +275,15 @@ def compute_performance(preds, labels):
 class DFGenerator(object):
 
     def __init__(self, df, terms_dict, batch_size):
+        sequences, ipros, starts, reverse, seqids = df
+        self.sequences = sequences
+        self.ipros = ipros
+        self.starts = starts
+        self.reverse = reverse
+        self.seqids = seqids
+        
         self.start = 0
-        self.size = len(df)
+        self.size = len(seqids)
         self.df = df
         self.batch_size = batch_size
         self.terms_dict = terms_dict
@@ -252,18 +300,20 @@ class DFGenerator(object):
         if self.start < self.size:
             batch_index = np.arange(
                 self.start, min(self.size, self.start + self.batch_size))
-            df = self.df.iloc[batch_index]
-            data_seq = np.zeros((len(df), MAXLEN), dtype=np.int32)
-            labels = np.zeros((len(df), self.nb_classes), dtype=np.int32)
-            data_onehot = np.zeros((len(df), MAXLEN, 21, 1), dtype=np.int32)
+            seqids = self.seqids[batch_index]
+            starts = self.starts[batch_index]
+            reverse = self.reverse[batch_index]
+            labels = np.zeros((len(seqids), self.nb_classes), dtype=np.int32)
+            data_onehot = np.zeros((len(seqids), MAXLEN, 21), dtype=np.int32)
             
-            for i, row in enumerate(df.itertuples()):
-                ngrams = to_ngrams(row.sequences[:(MAXLEN + 2)])
-                data_seq[i, 0:len(ngrams)] = ngrams
-                onehot = to_onehot(row.sequences)
-                data_onehot[i, :, :, 0] = onehot
-                
-                for t_id in row.interpros:
+            for i in range(len(seqids)):
+                if reverse[i]:
+                    revseq = self.sequences[seqids[i]][::-1]
+                    onehot = to_onehot(revseq, start=starts[i])
+                else:
+                    onehot = to_onehot(self.sequences[seqids[i]], start=starts[i])
+                data_onehot[i, :, :] = onehot
+                for t_id in self.ipros[seqids[i]]:
                     if t_id in self.terms_dict:
                         labels[i, self.terms_dict[t_id]] = 1
             self.start += self.batch_size

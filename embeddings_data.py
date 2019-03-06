@@ -5,19 +5,19 @@ import numpy as np
 import pandas as pd
 import gzip
 
-from utils import GeneOntology, read_fasta
+from utils import Ontology, read_fasta
 from aminoacids import MAXLEN, to_ngrams
 
 @ck.command()
 @ck.option(
-    '--vectors-file', '-wf', default='data/string/vectors.out',
+    '--vectors-file', '-wf', default='data/string/vectors.txt',
     help='Word2Vec output file')
 @ck.option(
     '--mapping-file', '-wf', default='data/string/graph_mapping.out',
     help='gen_graph.py mapping file')
 @ck.option(
     '--sequences-file', '-sf',
-    default='data/string/protein.sequences.v10.5.fa.gz',
+    default='data/string/protein.sequences.v10.fa.gz',
     help='Corpus with GO-Plus definition axioms')
 def main(vectors_file, mapping_file, sequences_file):
     # Read mapping
@@ -51,7 +51,7 @@ def main(vectors_file, mapping_file, sequences_file):
             if line.startswith('>'):
                 if seq != '':
                     if p_id in vectors:
-                        seqs.append(to_ngrams(seq))
+                        seqs.append(seq)
                         proteins.append(p_id)
                         embeddings.append(vectors[p_id])
                     seq = ''
@@ -60,7 +60,7 @@ def main(vectors_file, mapping_file, sequences_file):
             else:
                 seq += line
     if p_id in vectors:
-        seqs.append(to_ngrams(seq))
+        seqs.append(seq)
         proteins.append(p_id)
         embeddings.append(vectors[p_id])
 

@@ -4,7 +4,7 @@ import click as ck
 import numpy as np
 import pandas as pd
 
-from utils import GeneOntology
+from utils import Ontology
 
 @ck.command()
 @ck.option(
@@ -14,10 +14,10 @@ from utils import GeneOntology
     '--corpus-file', '-cf', default='data/go_corpus_expanded.txt',
     help='Corpus with GO-Plus definition axioms')
 @ck.option(
-    '--out-file', '-o', default='data/mappings.txt',
+    '--out-file', '-o', default='data/go_mappings.txt',
     help='Result file with a list of terms for prediction task')
 def main(go_file, corpus_file, out_file):
-    go = GeneOntology(go_file, with_rels=True)
+    go = Ontology(go_file, with_rels=True)
 
     w = open(out_file, 'w')
     with open(corpus_file, 'r') as f:

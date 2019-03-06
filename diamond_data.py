@@ -14,14 +14,14 @@ logging.basicConfig(level=logging.INFO)
 @ck.command()
 @ck.option(
     '--data-file', '-df', default='data/swissprot_exp.pkl',
-    help='Uniprot data file')
+    help='Pandas dataframe with protein sequences')
 @ck.option(
     '--out-file', '-o', default='data/swissprot_exp.fa',
-    help='swissprot proteins with exp annots')
+    help='Fasta file')
 def main(data_file, out_file):
     # Load interpro data
     df = pd.read_pickle(data_file)
-
+    
     with open(out_file, 'w') as f:
         for row in df.itertuples():
             f.write('>' + row.proteins + '\n')

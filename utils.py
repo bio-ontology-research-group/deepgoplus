@@ -133,23 +133,24 @@ class Ontology(object):
                     q.append(ch_id)
         return term_set
 
-def read_fasta(lines):
+def read_fasta(filename):
     seqs = list()
     info = list()
     seq = ''
     inf = ''
-    for line in lines:
-        line = line.strip()
-        if line.startswith('>'):
-            if seq != '':
-                seqs.append(seq)
-                info.append(inf)
-                seq = ''
-            inf = line[1:]
-        else:
-            seq += line
-    seqs.append(seq)
-    info.append(inf)
+    with open(filename, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('>'):
+                if seq != '':
+                    seqs.append(seq)
+                    info.append(inf)
+                    seq = ''
+                inf = line[1:]
+            else:
+                seq += line
+        seqs.append(seq)
+        info.append(inf)
     return info, seqs
 
 

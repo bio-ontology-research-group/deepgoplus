@@ -20,13 +20,13 @@ logging.basicConfig(level=logging.INFO)
     '--uberon-file', '-uf', default='data/uberon-basic.obo',
     help='Uberon Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/swissprot_exp201801.pkl',
+    '--old-data-file', '-oldf', default='data/swissprot_exp201601.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
-    '--new-data-file', '-ndf', default='data/swissprot_exp.pkl',
+    '--new-data-file', '-ndf', default='data/swissprot_exp201610.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
-    '--mapping-file', '-tf', default='data/mappings.txt',
+    '--mapping-file', '-tf', default='data/go_mappings.txt',
     help='A mapping file extracted from definitions (mappings.py)')
 @ck.option(
     '--embed-mapping-file', '-emf', default='data/diamond_mapping.out',
@@ -51,10 +51,10 @@ def main(go_file, cl_file, uberon_file, old_data_file, new_data_file,
          out_terms_file, train_data_file, test_data_file, min_count):
     go = Ontology(go_file, with_rels=True)
     logging.info('GO loaded')
-    cl = Ontology(cl_file)
-    logging.info('CL loaded')
-    uber = Ontology(uberon_file)
-    logging.info('UBERON loaded')
+    # cl = Ontology(cl_file)
+    # logging.info('CL loaded')
+    # uber = Ontology(uberon_file)
+    # logging.info('UBERON loaded')
     
     df = pd.read_pickle(old_data_file)
     
@@ -78,7 +78,7 @@ def main(go_file, cl_file, uberon_file, old_data_file, new_data_file,
                 annots.add(go_id)
             
         annotations.append(annots)
-        for term in annots:
+        for term in row['annotations']:
             cnt[term] += 1
         # logging.info(f'Protein {row.proteins} processed')
         

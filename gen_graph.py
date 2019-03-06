@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 import click as ck
 import gzip
+from utils import CAFA_TARGETS
 
 @ck.command()
 @ck.option(
-    '--string-db-file', '-sdb', default='data/string/protein.links.v10.5.txt.gz',
+    '--string-db-file', '-sdb', default='data/string/protein.links.v11.0.txt.gz',
     help='StringDB protein links file')
 @ck.option(
-    '--orth-file', '-of', default='data/string/COG.mappings.v10.5.txt.gz',
+    '--orth-file', '-of', default='data/string/COG.mappings.v11.0.txt.gz',
     help='StringDB orthology mappings')
 @ck.option(
     '--out-file', '-o',
-    default='data/string/graph.out',
+    default='/opt/data/string/graph.out',
     help='Graph for Word2Vec')
 @ck.option(
     '--mapping-file', '-mf',
-    default='data/string/graph_mapping.out',
+    default='/opt/data/string/graph_mapping.out',
     help='Protein ID to graph id mapping')
 def main(string_db_file, orth_file, out_file, mapping_file):
     mapping = dict()
@@ -33,8 +34,13 @@ def main(string_db_file, orth_file, out_file, mapping_file):
             items = line.strip().split(' ')
             p1 = items[0]
             p2 = items[1]
+
+            org = p1.split('.')[0]
+            if org not in CAFA_TARGETS:
+                continue
+
             score = int(items[2])
-            if score < 300:
+            if score < 700:
                 continue
             if p1 not in mapping:
                 mapping[p1] = len(mapping)
@@ -45,7 +51,7 @@ def main(string_db_file, orth_file, out_file, mapping_file):
             id3 = str(mapping[inter])
             rf.write(id1 + ' ' + id2 + ' ' + id3 + '\n')
             rf.write(id2 + ' ' + id1 + ' ' + id3 + '\n')
-
+    
     orthologs = {}
     with gzip.open(orth_file, 'rt') as f:
         next(f)
@@ -53,6 +59,9 @@ def main(string_db_file, orth_file, out_file, mapping_file):
             it = line.strip().split('\t')
             o_id = it[3]
             p_id = it[0]
+            org = p_id.split('.')[0]
+            if org not in CAFA_TARGETS:
+                continue
             if o_id not in orthologs:
                 orthologs[o_id] = []
             orthologs[o_id].append(p_id)
