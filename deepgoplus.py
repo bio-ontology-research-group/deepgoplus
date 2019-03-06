@@ -13,7 +13,7 @@ from tensorflow.keras.layers import (
     MaxPooling1D, Dropout,
 )
 from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from sklearn.metrics import roc_curve, auc, matthews_corrcoef
 
@@ -100,12 +100,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         pi //= 5
         params['initializer'] = initializers[pi % 2]
         pi //= 2
-        margin = margins[params_array_index % 5]
-        params_array_index //= 5
-        embedding_size = sizes[params_array_index % 4]
-        params_array_index //= 4
-        org = orgs[params_array_index % 2]
-        
         out_file = f'data/predictions_{params_index}.pkl'
         logger_file = f'data/training_{params_index}.csv'
         model_file = f'data/model_{params_index}.h5'
@@ -126,7 +120,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
             model = load_model(model_file)
         else:
             logging.info('Creating a new model')
-            model = create_model(nb_classes)
+            model = create_model(nb_classes, params)
             
             logging.info("Training data size: %d" % len(train_df))
             logging.info("Validation data size: %d" % len(valid_df))
