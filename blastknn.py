@@ -50,7 +50,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     help='Definition mapping file')
 def main(train_data_file, test_data_file,
          diamond_scores_file, ont, k, threshold,
-         mapping_file, params_index):
+         mapping_file):
 
     go = Ontology('data/go.obo', with_rels=False)
     go_rels = Ontology('data/go.obo', with_rels=True)
@@ -100,31 +100,38 @@ def main(train_data_file, test_data_file,
             for go_id, score in zip(allgos, sim): # KNN
                 if score >= 0.3:
                     annots.add(go_id)
-
-        # DeepGOPlus
-        for j, score in enumerate(row.preds):
-            if score >= threshold and terms[j].startswith('GO:'):
-                annots.add(terms[j])
+        preds.append(annots)
         
-        new_annots = set()
-        for go_id in annots:
-            new_annots |= go_rels.get_anchestors(go_id)
-        preds.append(new_annots)
-        
-    labels = test_df['annotations'].values
-
+    # DeepGOPlus
     go_set = go.get_term_set(FUNC_DICT[ont])        
-    # deepgo_funcs = pd.read_pickle('data/deepgo/' + ont + '.pkl')['functions'].values
-    # go_set = set(deepgo_funcs.flatten())
-
-    print(len(go_set))
-    
-    # Filter classes
+    labels = test_df['annotations'].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
-    preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), preds))
-    
-    print(compute_fscore_annotations(labels, preds))
+    print(len(go_set))
+    fmax = 0.0
+    tmax = 0.0
+    for t in range(1, 101):
+        threshold = t / 100.0
+        for i, row in enumerate(test_df.itertuples()):
+            for j, score in enumerate(row.preds):
+                if score >= threshold and terms[j].startswith('GO:'):
+                    preds[i].add(terms[j])
         
+            new_annots = set()
+            for go_id in preds[i]:
+                new_annots |= go_rels.get_anchestors(go_id)
+            preds[i] = new_annots
+        
+    
+        # Filter classes
+        preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), preds))
+    
+        fscore = compute_fscore_annotations(labels, preds)
+        print(f'Fscore: {fscore}, threshold: {threshold}')
+        if fmax < fscore:
+            fmax = fscore
+            tmax = threshold
+    print(f'Fmax: {fmax}, threshold: {tmax}')
+    
 
 def compute_roc(preds, labels):
     # Compute ROC curve and ROC area for each class

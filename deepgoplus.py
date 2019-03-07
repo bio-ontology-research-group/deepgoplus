@@ -23,6 +23,7 @@ from aminoacids import to_ngrams, to_onehot, MAXLEN
 logging.basicConfig(level=logging.INFO)
 
 config = tf.ConfigProto(allow_soft_placement=True)
+config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 K.set_session(session)
 
@@ -72,10 +73,10 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
          out_file, split, batch_size, epochs, load, logger_file, threshold,
          device, params_index):
     params = {
-        'max_kernel': 65,
+        'max_kernel': 257,
         'initializer': 'glorot_uniform',
-        'dense_depth': 0,
-        'nb_filters': 32,
+        'dense_depth': 2,
+        'nb_filters': 128,
         'optimizer': Adam(lr=3e-4),
         'loss': 'binary_crossentropy'
     }
