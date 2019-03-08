@@ -84,7 +84,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     pi = params_index
     if params_index != -1:
         losses = ['mse', 'binary_crossentropy']
-        optimizers = [Adam(lr=3e-4), RMSprop(lr=3e-4), 'adagrad', 'adadelta']
+        optimizers = ['adam', 'rmsprop', 'adagrad', 'adadelta']
         kernels = [33, 65, 129, 257, 513]
         dense_depths = [0, 1, 2]
         nb_filters = [32, 64, 128, 256, 512]
