@@ -73,34 +73,25 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
          out_file, split, batch_size, epochs, load, logger_file, threshold,
          device, params_index):
     params = {
-        'max_kernel': 257,
-        'initializer': 'glorot_uniform',
-        'dense_depth': 2,
-        'nb_filters': 128,
+        'max_kernel': 33,
+        'initializer': 'glorot_normal',
+        'dense_depth': 1,
+        'nb_filters': 64,
         'optimizer': Adam(lr=3e-4),
         'loss': 'binary_crossentropy'
     }
     # SLURM JOB ARRAY INDEX
     pi = params_index
     if params_index != -1:
-        losses = ['mse', 'binary_crossentropy']
-        optimizers = ['adam', 'rmsprop', 'adagrad', 'adadelta']
         kernels = [33, 65, 129, 257, 513]
         dense_depths = [0, 1, 2]
         nb_filters = [32, 64, 128, 256, 512]
-        initializers = ['glorot_uniform', 'glorot_normal']
-        params['loss'] = losses[pi % 2]
-        pi //= 2
-        params['optimizer'] = optimizers[pi % 4]
-        pi //= 4
         params['max_kernel'] = kernels[pi % 5]
         pi //= 5
         params['dense_depth'] = dense_depths[pi % 3]
         pi //= 3
         params['nb_filters'] = nb_filters[pi % 5]
         pi //= 5
-        params['initializer'] = initializers[pi % 2]
-        pi //= 2
         out_file = f'data/predictions_{params_index}.pkl'
         logger_file = f'data/training_{params_index}.csv'
         model_file = f'data/model_{params_index}.h5'
