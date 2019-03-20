@@ -3,20 +3,12 @@
 import numpy as np
 import pandas as pd
 import click as ck
-from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.layers import (
-    Dense, Dropout, Activation, Input, Reshape,
-    Flatten, BatchNormalization, Embedding,
-    Conv1D, MaxPooling1D, Add, Concatenate)
-from tensorflow.keras.optimizers import Adam, RMSprop, Adadelta, SGD
 from sklearn.metrics import classification_report
 from sklearn.metrics.pairwise import cosine_similarity
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import sys
 from collections import deque
 import time
 import logging
-import tensorflow as tf
 from sklearn.metrics import roc_curve, auc, matthews_corrcoef
 from scipy.spatial import distance
 from scipy import sparse
