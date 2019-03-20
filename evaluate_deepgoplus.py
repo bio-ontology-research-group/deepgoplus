@@ -49,6 +49,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont, alpha):
 
+    alpha /= 100.0
     go_rels = Ontology('data-cafa3/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
