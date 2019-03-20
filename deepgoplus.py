@@ -73,10 +73,10 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
          out_file, split, batch_size, epochs, load, logger_file, threshold,
          device, params_index):
     params = {
-        'max_kernel': 33,
+        'max_kernel': 129,
         'initializer': 'glorot_normal',
-        'dense_depth': 1,
-        'nb_filters': 64,
+        'dense_depth': 0,
+        'nb_filters': 512,
         'optimizer': Adam(lr=3e-4),
         'loss': 'binary_crossentropy'
     }
@@ -105,8 +105,11 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     test_df = pd.read_pickle(test_data_file)
     terms_dict = {v: i for i, v in enumerate(terms)}
     nb_classes = len(terms)
-    
+
     with tf.device('/' + device):
+        test_steps = int(math.ceil(len(test_df) / batch_size))
+        test_generator = DFGenerator(test_df, terms_dict,
+                                     nb_classes, batch_size)
         if load:
             logging.info('Loading pretrained model')
             model = load_model(model_file)
@@ -119,7 +122,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
             checkpointer = ModelCheckpoint(
                 filepath=model_file,
                 verbose=1, save_best_only=True)
-            earlystopper = EarlyStopping(monitor='val_loss', patience=16, verbose=1)
+            earlystopper = EarlyStopping(monitor='val_loss', patience=6, verbose=1)
             logger = CSVLogger(logger_file)
 
             logging.info('Starting training the model')
@@ -136,8 +139,8 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
                 train_generator,
                 steps_per_epoch=train_steps,
                 epochs=epochs,
-                validation_data=valid_generator,
-                validation_steps=valid_steps,
+                validation_data=test_generator,
+                validation_steps=test_steps,
                 max_queue_size=batch_size,
                 workers=12,
                 callbacks=[logger, checkpointer, earlystopper])
@@ -146,11 +149,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
 
     
         logging.info('Evaluating model')
-        test_steps = int(math.ceil(len(test_df) / batch_size))
-        
-        test_generator = DFGenerator(test_df, terms_dict,
-                                     nb_classes, batch_size)
-    
         loss = model.evaluate_generator(test_generator, steps=test_steps)
         logging.info('Test loss %f' % loss)
         
@@ -166,11 +164,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     logging.info('Computing performance:')
     roc_auc = compute_roc(test_labels, preds)
     logging.info('ROC AUC: %.2f' % (roc_auc,))
-    predictions = (preds >= threshold).astype('int32')
-    mcc = compute_mcc(test_labels, predictions)
-    logging.info('MCC: %.2f' % (mcc,))
-    f = compute_fscore(test_labels, predictions)
-    logging.info('Fscore: %.2f' % (f,))
     test_df['labels'] = list(test_labels)
     test_df['preds'] = list(preds)
     

@@ -1,8 +1,9 @@
-from collections import deque
+from collections import deque, Counter
 import warnings
 import pandas as pd
 import numpy as np
 from xml.etree import ElementTree as ET
+import math
 
 BIOLOGICAL_PROCESS = 'GO:0008150'
 MOLECULAR_FUNCTION = 'GO:0003674'
@@ -12,9 +13,15 @@ FUNC_DICT = {
     'mf': MOLECULAR_FUNCTION,
     'bp': BIOLOGICAL_PROCESS}
 
+NAMESPACES = {
+    'cc': 'cellular_component',
+    'mf': 'molecular_function',
+    'bp': 'biological_process'
+}
+
 EXP_CODES = set([
-    'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC',
-    'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
+    'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC',])
+#    'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 CAFA_TARGETS = set([
     '10090', '223283', '273057', '559292', '85962',
     '10116',  '224308', '284812', '7227', '9606',
@@ -33,9 +40,30 @@ class Ontology(object):
 
     def __init__(self, filename='data/go.obo', with_rels=False):
         self.ont = self.load(filename, with_rels)
+        self.ic = None
 
     def has_term(self, term_id):
         return term_id in self.ont
+
+    def calculate_ic(self, annots):
+        cnt = Counter()
+        for x in annots:
+            cnt.update(x)
+        self.ic = {}
+        for go_id, n in cnt.items():
+            parents = self.get_parents(go_id)
+            if len(parents) == 0:
+                min_n = n
+            else:
+                min_n = min([cnt[x] for x in parents])
+            self.ic[go_id] = math.log(min_n / n, 2)
+    
+    def get_ic(self, go_id):
+        if self.ic is None:
+            raise Exception('Not yet calculated')
+        if go_id not in self.ic:
+            raise Exception('No annotations for %s' % go_id)
+        return self.ic[go_id]
 
     def load(self, filename, with_rels):
         ont = dict()
@@ -65,6 +93,8 @@ class Ontology(object):
                         obj['id'] = l[1]
                     elif l[0] == 'alt_id':
                         obj['alt_ids'].append(l[1])
+                    elif l[0] == 'namespace':
+                        obj['namespace'] = l[1]
                     elif l[0] == 'is_a':
                         obj['is_a'].append(l[1].split(' ! ')[0])
                     elif with_rels and l[0] == 'relationship':
@@ -119,6 +149,13 @@ class Ontology(object):
         return term_set
 
 
+    def get_namespace_terms(self, namespace):
+        terms = set()
+        for go_id, obj in self.ont.items():
+            if obj['namespace'] == namespace:
+                terms.add(go_id)
+        return terms
+    
     def get_term_set(self, term_id):
         if term_id not in self.ont:
             return set()
