@@ -36,7 +36,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
 @ck.option(
-    '--alpha', '-a', default=1.0,
+    '--alpha', '-a', default=100.0,
     help='Alpha for for combining scores')
 def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont, alpha):
