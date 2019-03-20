@@ -119,6 +119,8 @@ def main(train_data_file, test_data_file, terms_file,
         preds = []
         for i, row in enumerate(test_df.itertuples()):
             annots_dict = blast_preds[i].copy()
+            for go_id in annots_dict:
+                annots_dict[go_id] *= alpha
             for j, score in enumerate(row.preds):
                 go_id = terms[j]
                 # Consensus between BLAST and DeepGOPLus
@@ -126,8 +128,9 @@ def main(train_data_file, test_data_file, terms_file,
                 # if go_id in blast_preds[i]:
                 #     score *= (1 - alpha * blast_preds[i][go_id])
                 # score = 1 - score
+                score *= 1 - alpha
                 if go_id in annots_dict:
-                    annots_dict[go_id] = max(annots_dict[go_id], score * alpha)
+                    annots_dict[go_id] += score
                 else:
                     annots_dict[go_id] = score
                 
