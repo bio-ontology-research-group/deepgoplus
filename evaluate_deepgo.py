@@ -75,7 +75,7 @@ def main(train_data_file, preds_file, ont):
     smin = 1000.0
     precisions = []
     recalls = []
-    for t in range(1, 101):
+    for t in range(101):
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):

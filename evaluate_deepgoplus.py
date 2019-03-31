@@ -21,22 +21,22 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
+    '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa3/predictions.pkl',
+    '--test-data-file', '-tsdf', default='data/predictions.pkl',
     help='Test data file')
 @ck.option(
-    '--terms-file', '-tf', default='data-cafa3/terms.pkl',
+    '--terms-file', '-tf', default='data/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data-cafa3/test_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
 @ck.option(
-    '--alpha', '-a', default=100.0,
+    '--alpha', '-a', default=50,
     help='Alpha for for combining scores')
 def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont, alpha):
@@ -106,7 +106,7 @@ def main(train_data_file, test_data_file, terms_file,
     precisions = []
     recalls = []
     smin = 1000000.0
-    for t in range(1, 101):
+    for t in range(101):
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
@@ -166,9 +166,9 @@ def main(train_data_file, test_data_file, terms_file,
     plt.ylabel('Precision')
     plt.title('Area Under the Precision-Recall curve')
     plt.legend(loc="lower right")
-    plt.savefig('aupr.pdf')
-    plt.show()
-
+    plt.savefig(f'aupr_{ont}_{alpha:0.2f}.pdf')
+    df = pd.DataFrame({'precisions': precisions, 'recalls': recalls})
+    df.to_pickle(f'PR_{ont}_{alpha:0.2f}.pkl')
 
 def compute_roc(labels, preds):
     # Compute ROC curve and ROC area for each class
@@ -211,7 +211,8 @@ def evaluate_annotations(go, real_annots, pred_annots):
     ru /= total
     mi /= total
     r /= total
-    p /= p_total
+    if p_total > 0:
+        p /= p_total
     f = 0.0
     if p + r > 0:
         f = 2 * p * r / (p + r)
