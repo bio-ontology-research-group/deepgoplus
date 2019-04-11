@@ -170,65 +170,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     logging.info('Saving predictions')
     test_df.to_pickle(out_file)
 
-def compute_roc(labels, preds):
-    # Compute ROC curve and ROC area for each class
-    fpr, tpr, _ = roc_curve(labels.flatten(), preds.flatten())
-    roc_auc = auc(fpr, tpr)
-    return roc_auc
-
-def compute_mcc(labels, predictions):
-    mcc = matthews_corrcoef(labels.flatten(), predictions.flatten())
-    return mcc
-
-def compute_fscore(labels, predictions):
-    total = 0
-    p_total = 0
-    p = 0.0
-    r = 0.0
-    for i in range(labels.shape[0]):
-        tp = np.sum(predictions[i, :] * labels[i, :])
-        fp = np.sum(predictions[i, :]) - tp
-        fn = np.sum(labels[i, :]) - tp
-        if tp == 0 and fp == 0 and fn == 0:
-            continue
-        total += 1
-        if tp != 0:
-            p_total += 1
-            precision = tp / (1.0 * (tp + fp))
-            recall = tp / (1.0 * (tp + fn))
-            p += precision
-            r += recall
-    r /= total
-    p /= p_total
-    if p + r > 0:
-        return 2 * p * r / (p + r)
-    return 0.0
-
-def compute_fscore_annotations(real_annots, pred_annots):
-    total = 0
-    p = 0.0
-    r = 0.0
-    p_total= 0
-    for i in range(len(real_annots)):
-        if len(real_annots[i]) == 0:
-            continue
-        tp = len(set(real_annots[i]).intersection(set(pred_annots[i])))
-        fp = len(pred_annots[i]) - tp
-        fn = len(real_annots[i]) - tp
-        total += 1
-        recall = tp / (1.0 * (tp + fn))
-        r += recall
-        if len(pred_annots[i]) > 0:
-            p_total += 1
-            precision = tp / (1.0 * (tp + fp))
-            p += precision
-            
-    r /= total
-    p /= p_total
-    if p + r > 0:
-        return 2 * p * r / (p + r)
-    return 0.0
-
 
 def create_model(nb_classes, params):
     inp_hot = Input(shape=(MAXLEN, 21), dtype=np.float32)
