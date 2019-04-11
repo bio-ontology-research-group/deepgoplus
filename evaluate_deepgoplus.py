@@ -21,16 +21,16 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data/train_data.pkl',
+    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data/predictions.pkl',
+    '--test-data-file', '-tsdf', default='data-cafa3/predictions/predictions_62.pkl',
     help='Test data file')
 @ck.option(
-    '--terms-file', '-tf', default='data/terms.pkl',
+    '--terms-file', '-tf', default='data-cafa3/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data-cafa3/test_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',
@@ -69,7 +69,7 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
-    blast_tresh = {'mf': 0.12, 'cc': 0.27, 'bp':0.21 }
+    # blast_tresh = {'mf': 0.12, 'cc': 0.27, 'bp':0.21 }
     for i, row in enumerate(test_df.itertuples()):
         annots = {}
         prot_id = row.proteins
@@ -110,17 +110,12 @@ def main(train_data_file, test_data_file, terms_file,
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
-            annots_dict = blast_preds[i].copy()
+            annots_dict = {} # blast_preds[i].copy()
             for go_id in annots_dict:
                 annots_dict[go_id] *= alpha
             for j, score in enumerate(row.preds):
                 go_id = terms[j]
-                # Consensus between BLAST and DeepGOPLus
-                # score = 1 - alpha * score
-                # if go_id in blast_preds[i]:
-                #     score *= (1 - alpha * blast_preds[i][go_id])
-                # score = 1 - score
-                score *= 1 - alpha
+                # score *= 1 - alpha
                 if go_id in annots_dict:
                     annots_dict[go_id] += score
                 else:

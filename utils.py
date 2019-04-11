@@ -62,7 +62,7 @@ class Ontology(object):
         if self.ic is None:
             raise Exception('Not yet calculated')
         if go_id not in self.ic:
-            raise Exception('No annotations for %s' % go_id)
+            return 0.0
         return self.ic[go_id]
 
     def load(self, filename, with_rels):

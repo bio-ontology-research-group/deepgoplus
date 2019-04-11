@@ -105,5 +105,11 @@ venv.bak/
 
 # Data folder
 data/
+data-*/
 
 deepwalk
+
+*.pkl
+*.pdf
+*.out
+

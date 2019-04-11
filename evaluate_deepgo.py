@@ -29,10 +29,10 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
+    '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--preds-file', '-pf', default='data-deepgo/model_preds_filtered_mf.pkl',
+    '--preds-file', '-pf', default='data-deepgo2016/test-mf-preds.pkl',
     help='DeepGO predictions file')
 @ck.option(
     '--ont', '-o', default='mf',
@@ -54,7 +54,8 @@ def main(train_data_file, preds_file, ont):
     for i, row in enumerate(test_df.itertuples()):
         annots = set()
         for go_id in row.gos:
-            annots |= go.get_anchestors(go_id)
+            if go.has_term(go_id):
+                annots |= go.get_anchestors(go_id)
         test_annotations.append(annots)
     go.calculate_ic(annotations + test_annotations)
     
