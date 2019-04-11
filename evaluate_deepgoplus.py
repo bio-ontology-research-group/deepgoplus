@@ -110,12 +110,12 @@ def main(train_data_file, test_data_file, terms_file,
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
-            annots_dict = {} # blast_preds[i].copy()
+            annots_dict = blast_preds[i].copy()
             for go_id in annots_dict:
                 annots_dict[go_id] *= alpha
             for j, score in enumerate(row.preds):
                 go_id = terms[j]
-                # score *= 1 - alpha
+                score *= 1 - alpha
                 if go_id in annots_dict:
                     annots_dict[go_id] += score
                 else:
