@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import gzip
 import logging
-from utils import Ontology, is_exp_code, is_cafa_target
+from utils import Ontology, is_exp_code, is_cafa_target, FUNC_DICT
 
 logging.basicConfig(level=logging.INFO)
 

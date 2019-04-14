@@ -8,7 +8,7 @@ AAINDEX = dict()
 for i in range(len(AALETTER)):
     AAINDEX[AALETTER[i]] = i + 1
 INVALID_ACIDS = set(['U', 'O', 'B', 'Z', 'J', 'X', '*'])
-MAXLEN = 1000
+MAXLEN = 2000
 NGRAMS = {}
 for i in range(20):
     for j in range(20):
@@ -30,11 +30,11 @@ def to_ngrams(seq):
         ngrams[i] = NGRAMS.get(seq[i: i + 3], 0)
     return ngrams
 
-def to_onehot(seq):
+def to_onehot(seq, start=0):
     onehot = np.zeros((MAXLEN, 21), dtype=np.int32)
     l = min(MAXLEN, len(seq))
-    for i in range(l):
-        onehot[i, AAINDEX.get(seq[i], 0)] = 1
-    if l < onehot.shape[0]:
-        onehot[l:, 0] = 1
+    for i in range(start, start + l):
+        onehot[i, AAINDEX.get(seq[i - start], 0)] = 1
+    onehot[0:start, 0] = 1
+    onehot[start + l:, 0] = 1
     return onehot
