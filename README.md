@@ -16,6 +16,7 @@ pip install -r requirements.txt
 ## Data
 * http://deepgoplus.bio2vec.net/data/ - Here you can find the data
 used to train and evaluate our method.
+ * data.tar.gz - Data required to run predict.sh script
  * data-cafa.tar.gz - CAFA3 challenge dataset
  * data-2016.tar.gz - Dataset which is used to compare DeepGOPlus with
    GOLabeler and DeepText2GO
@@ -32,7 +33,7 @@ database format to pandas dataframe.
 ## Running
 * Download all the files from http://deepgoplus.bio2vec.net/data/data.tar.gz and place them into data folder
 * Install [diamond](https://github.com/bbuchfink/diamond) program on your system (diamond command should be available)
-* run predict.py -if <input_fasta_filename> arguments -of results.tsv
+* run predict.sh <input_fasta_filename> <results_filename>
 
 The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 
