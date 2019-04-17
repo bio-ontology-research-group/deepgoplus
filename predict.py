@@ -110,9 +110,8 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
             w.write(prot_id)
             for go_id, score in annots.items():
                 if score >= threshold:
-                    w.write('\t' + go_id + '|%.2f' % score)
+                    w.write('\t' + go_id + '|%.3f' % score)
             w.write('\n')
-        break
     w.close()
     total_time = time.time() - start_time
     print('Total prediction time for %d sequences is %d' % (total_seq, total_time))
