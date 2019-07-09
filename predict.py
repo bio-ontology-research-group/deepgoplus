@@ -20,7 +20,7 @@ MAXLEN = 2000
 @ck.option('--annotations-file', '-tf', default='data/train_data.pkl', help='Experimental annotations')
 @ck.option('--chunk-size', '-cs', default=1000, help='Number of sequences to read at a time')
 @ck.option('--diamond-file', '-df', default='data/test_diamond.res', help='Diamond Mapping file')
-@ck.option('--threshold', '-t', default=0.3, help='Prediction threshold')
+@ck.option('--threshold', '-t', default=0.0, help='Prediction threshold')
 @ck.option('--batch-size', '-bs', default=32, help='Batch size for prediction model')
 @ck.option('--alpha', '-a', default=0.5, help='Alpha weight parameter')
 def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,

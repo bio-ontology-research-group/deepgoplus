@@ -155,6 +155,9 @@ class Ontology(object):
             if obj['namespace'] == namespace:
                 terms.add(go_id)
         return terms
+
+    def get_namespace(self, term_id):
+        return self.ont[term_id]['namespace']
     
     def get_term_set(self, term_id):
         if term_id not in self.ont:
