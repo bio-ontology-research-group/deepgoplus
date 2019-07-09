@@ -73,16 +73,16 @@ def main(go_file, old_data_file, new_data_file,
     df.to_pickle(out_terms_file)
 
     # Save testing data
-    df = pd.read_pickle(new_data_file)
+    # df = pd.read_pickle(new_data_file)
 
-    index = []
-    for i, row in enumerate(df.itertuples()):
-        p_id = row.proteins
-        if p_id not in train_prots:
-            index.append(i)
-    df = df.iloc[index]
+    # index = []
+    # for i, row in enumerate(df.itertuples()):
+    #     p_id = row.proteins
+    #     if p_id not in train_prots:
+    #         index.append(i)
+    # df = df.iloc[index]
     
-    df.to_pickle(test_data_file)
+    # df.to_pickle(test_data_file)
 
                 
 

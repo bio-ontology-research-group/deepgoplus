@@ -21,40 +21,34 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa/train_data.pkl',
+    '--train-data-file', '-trdf', default='data-cafa/train_data_train.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa/predictions/predictions_62.pkl',
-    help='Test data file')
+    '--valid-data-file', '-trdf', default='data-cafa/train_data_valid.pkl',
+    help='Data file with training features')
 @ck.option(
     '--terms-file', '-tf', default='data-cafa/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data-cafa/test_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data-cafa/valid_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
-@ck.option(
-    '--alpha', '-a', default=50,
-    help='Alpha for for combining scores')
-def main(train_data_file, test_data_file, terms_file,
-         diamond_scores_file, ont, alpha):
+def main(train_data_file, valid_data_file, terms_file, diamond_scores_file, ont):
 
-    alpha /= 100.0
     go_rels = Ontology('data-cafa/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
 
     train_df = pd.read_pickle(train_data_file)
-    test_df = pd.read_pickle(test_data_file)
+    valid_df = pd.read_pickle(valid_data_file)
     annotations = train_df['annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
-    test_annotations = test_df['annotations'].values
-    test_annotations = list(map(lambda x: set(x), test_annotations))
-    go_rels.calculate_ic(annotations + test_annotations)
-
+    valid_annotations = valid_df['annotations'].values
+    valid_annotations = list(map(lambda x: set(x), valid_annotations))
+    go_rels.calculate_ic(annotations + valid_annotations)
     # Print IC values of terms
     ics = {}
     for term in terms:
@@ -75,7 +69,7 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
-    for i, row in enumerate(test_df.itertuples()):
+    for i, row in enumerate(valid_df.itertuples()):
         annots = {}
         prot_id = row.proteins
         # BlastKNN
@@ -102,101 +96,65 @@ def main(train_data_file, test_data_file, terms_file,
     # DeepGOPlus
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])
-    labels = test_df['annotations'].values
+    labels = valid_df['annotations'].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
-    # print(len(go_set))
-    deep_preds = []
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    for i, row in enumerate(test_df.itertuples()):
-        annots_dict = blast_preds[i].copy()
-        for go_id in annots_dict:
-            annots_dict[go_id] *= alphas[go_rels.get_namespace(go_id)]
-        for j, score in enumerate(row.preds):
-            go_id = terms[j]
-            score *= 1 - alphas[go_rels.get_namespace(go_id)]
-            if go_id in annots_dict:
-                annots_dict[go_id] += score
-            else:
-                annots_dict[go_id] = score
-        deep_preds.append(annots_dict)
-    print('AUTHOR DeepGOPlus')
-    print('MODEL 1')
-    print('KEYWORDS sequence alignment.')
-    for i, row in enumerate(test_df.itertuples()):
-        prot_id = row.proteins
-        for go_id, score in deep_preds[i].items():
-            print(f'{prot_id}\t{go_id}\t{score:.2f}')
-    print('END')
-    return
-    # Propagate scores
-    # deepgo_preds = []
-    # for annots_dict in deep_preds:
-    #     annots = {}
-    #     for go_id, score in annots_dict.items():
-    #         for a_id in go_rels.get_anchestors(go_id):
-    #             if a_id in annots:
-    #                 annots[a_id] = max(annots[a_id], score)
-    #             else:
-    #                 annots[a_id] = score
-    #     deepgo_preds.append(annots)
-    
-    fmax = 0.0
-    tmax = 0.0
-    precisions = []
-    recalls = []
-    smin = 1000000.0
-    rus = []
-    mis = []
-    for t in range(0, 101):
-        threshold = t / 100.0
-        preds = []
-        for i, row in enumerate(test_df.itertuples()):
-            annots = set()
-            for go_id, score in deep_preds[i].items():
-                if score >= threshold:
-                    annots.add(go_id)
+    print(len(go_set))
+    best_fmax = 0.0
+    best_alpha = 0.0
+    for alpha in range(44, 70):
+        alpha /= 100.0
+        deep_preds = []
+        for i, row in enumerate(valid_df.itertuples()):
+            annots_dict = blast_preds[i].copy()
+            for go_id in annots_dict:
+                annots_dict[go_id] *= alpha
+            for j, score in enumerate(row.preds):
+                go_id = terms[j]
+                score *= 1 - alpha
+                if go_id in annots_dict:
+                    annots_dict[go_id] += score
+                else:
+                    annots_dict[go_id] = score
+            deep_preds.append(annots_dict)
 
-            new_annots = set()
-            for go_id in annots:
-                new_annots |= go_rels.get_anchestors(go_id)
-            preds.append(new_annots)
-            
-        # Filter classes
-        preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), preds))
-    
-        fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, labels, preds)
-        avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
-        avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
-        print(f'{avg_fp} {avg_ic}')
-        precisions.append(prec)
-        recalls.append(rec)
-        print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
-        if fmax < fscore:
-            fmax = fscore
-            tmax = threshold
-        if smin > s:
-            smin = s
-    print(f'Fmax: {fmax:0.3f}, Smin: {smin:0.3f}, threshold: {tmax}')
-    precisions = np.array(precisions)
-    recalls = np.array(recalls)
-    sorted_index = np.argsort(recalls)
-    recalls = recalls[sorted_index]
-    precisions = precisions[sorted_index]
-    aupr = np.trapz(precisions, recalls)
-    print(f'AUPR: {aupr:0.3f}')
-    plt.figure()
-    lw = 2
-    plt.plot(recalls, precisions, color='darkorange',
-             lw=lw, label=f'AUPR curve (area = {aupr:0.2f})')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Area Under the Precision-Recall curve')
-    plt.legend(loc="lower right")
-    plt.savefig(f'aupr_{ont}_{alpha:0.2f}.pdf')
-    df = pd.DataFrame({'precisions': precisions, 'recalls': recalls})
-    df.to_pickle(f'PR_{ont}_{alpha:0.2f}.pkl')
+        fmax = 0.0
+        tmax = 0.0
+        precisions = []
+        recalls = []
+        smin = 1000000.0
+        rus = []
+        mis = []
+        for t in range(14, 20):
+            threshold = t / 100.0
+            preds = []
+            for i, row in enumerate(valid_df.itertuples()):
+                annots = set()
+                for go_id, score in deep_preds[i].items():
+                    if score >= threshold:
+                        annots.add(go_id)
+
+                new_annots = set()
+                for go_id in annots:
+                    new_annots |= go_rels.get_anchestors(go_id)
+                preds.append(new_annots)
+
+            # Filter classes
+            preds = list(map(lambda x: set(filter(lambda y: y in go_set, x)), preds))
+
+            fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, labels, preds)
+            avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
+            avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
+            print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
+            if fmax < fscore:
+                fmax = fscore
+                tmax = threshold
+            if smin > s:
+                smin = s
+        if best_fmax < fmax:
+            best_fmax = fmax
+            best_alpha = alpha
+        print(f'Alpha: {alpha} Fmax: {fmax:0.3f}, Smin: {smin:0.3f}, threshold: {tmax}')
+    print(f'{best_alpha} {best_fmax}')
 
 def compute_roc(labels, preds):
     # Compute ROC curve and ROC area for each class
