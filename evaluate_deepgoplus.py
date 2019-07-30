@@ -24,7 +24,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     '--train-data-file', '-trdf', default='data-cafa/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa/predictions/predictions_62.pkl',
+    '--test-data-file', '-tsdf', default='data-cafa/predictions.pkl',
     help='Test data file')
 @ck.option(
     '--terms-file', '-tf', default='data-cafa/terms.pkl',
@@ -119,15 +119,16 @@ def main(train_data_file, test_data_file, terms_file,
             else:
                 annots_dict[go_id] = score
         deep_preds.append(annots_dict)
-    print('AUTHOR DeepGOPlus')
-    print('MODEL 1')
-    print('KEYWORDS sequence alignment.')
-    for i, row in enumerate(test_df.itertuples()):
-        prot_id = row.proteins
-        for go_id, score in deep_preds[i].items():
-            print(f'{prot_id}\t{go_id}\t{score:.2f}')
-    print('END')
-    return
+    # print('AUTHOR DeepGOPlus')
+    # print('MODEL 1')
+    # print('KEYWORDS sequence alignment.')
+    # for i, row in enumerate(test_df.itertuples()):
+    #     prot_id = row.proteins
+    #     for go_id, score in deep_preds[i].items():
+    #         print(f'{prot_id}\t{go_id}\t{score:.2f}')
+    # print('END')
+    # return
+
     # Propagate scores
     # deepgo_preds = []
     # for annots_dict in deep_preds:
