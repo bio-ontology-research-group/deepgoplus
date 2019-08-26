@@ -40,5 +40,5 @@ The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 ## Citation
 
 If you use DeepGOPlus for your research, or incorporate our learning algorithms in your work, please cite:
-Maxat Kulmanov, Robert Hoehndorf; DeepGOPlus: Improved protein function prediction from sequence, Bioarxiv, https://www.biorxiv.org/content/10.1101/615260v1
+Maxat Kulmanov, Robert Hoehndorf; DeepGOPlus: Improved protein function prediction from sequence, Bioinformatics, https://doi.org/10.1093/bioinformatics/btz595
 
