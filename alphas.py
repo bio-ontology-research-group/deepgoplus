@@ -21,23 +21,23 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa/train_data_train.pkl',
+    '--train-data-file', '-trdf', default='data/train_data_train.pkl',
     help='Data file with training features')
 @ck.option(
-    '--valid-data-file', '-trdf', default='data-cafa/train_data_valid.pkl',
+    '--valid-data-file', '-trdf', default='data/train_data_valid.pkl',
     help='Data file with training features')
 @ck.option(
-    '--terms-file', '-tf', default='data-cafa/terms.pkl',
+    '--terms-file', '-tf', default='data/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data-cafa/valid_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data/valid_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
 def main(train_data_file, valid_data_file, terms_file, diamond_scores_file, ont):
 
-    go_rels = Ontology('data-cafa/go.obo', with_rels=True)
+    go_rels = Ontology('data/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
@@ -101,7 +101,7 @@ def main(train_data_file, valid_data_file, terms_file, diamond_scores_file, ont)
     print(len(go_set))
     best_fmax = 0.0
     best_alpha = 0.0
-    for alpha in range(44, 70):
+    for alpha in range(40, 70):
         alpha /= 100.0
         deep_preds = []
         for i, row in enumerate(valid_df.itertuples()):
@@ -124,7 +124,7 @@ def main(train_data_file, valid_data_file, terms_file, diamond_scores_file, ont)
         smin = 1000000.0
         rus = []
         mis = []
-        for t in range(14, 20):
+        for t in range(10, 30):
             threshold = t / 100.0
             preds = []
             for i, row in enumerate(valid_df.itertuples()):

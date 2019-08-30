@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.INFO)
 def main(data_file, out_file):
     # Load interpro data
     df = pd.read_pickle(data_file)
+    df = df[df['orgs'] == '9606']
     
     with open(out_file, 'w') as f:
         for row in df.itertuples():

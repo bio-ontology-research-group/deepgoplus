@@ -29,22 +29,22 @@ K.set_session(session)
 
 @ck.command()
 @ck.option(
-    '--go-file', '-gf', default='data-cafa/go.obo',
+    '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa/train_data.pkl',
+    '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa/test_data.pkl',
+    '--test-data-file', '-tsdf', default='data/train_data.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--terms-file', '-tf', default='data-cafa/terms.pkl',
+    '--terms-file', '-tf', default='data/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--model-file', '-mf', default='data-cafa/model.h5',
+    '--model-file', '-mf', default='data/model.h5',
     help='DeepGOPlus model')
 @ck.option(
-    '--out-file', '-o', default='data-cafa/predictions.pkl',
+    '--out-file', '-o', default='data/predictions.pkl',
     help='Result file with predictions for test set')
 @ck.option(
     '--split', '-s', default=0.9,
@@ -58,7 +58,7 @@ K.set_session(session)
 @ck.option(
     '--load', '-ld', is_flag=True, help='Load Model?')
 @ck.option(
-    '--logger-file', '-lf', default='data-cafa/training.csv',
+    '--logger-file', '-lf', default='data/training.csv',
     help='Batch size')
 @ck.option(
     '--threshold', '-th', default=0.5,
@@ -148,23 +148,23 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
             model = load_model(model_file)
 
     
-        logging.info('Evaluating model')
-        loss = model.evaluate_generator(test_generator, steps=test_steps)
-        logging.info('Test loss %f' % loss)
+        # logging.info('Evaluating model')
+        # loss = model.evaluate_generator(test_generator, steps=test_steps)
+        # logging.info('Test loss %f' % loss)
+        # logging.info('Predicting')
+        # test_generator.reset()
+        # preds = model.predict_generator(test_generator, steps=test_steps)
+        
+        valid_steps = int(math.ceil(len(valid_df) / batch_size))
+        valid_generator = DFGenerator(valid_df, terms_dict,
+                                      nb_classes, batch_size)
         logging.info('Predicting')
         valid_generator.reset()
         preds = model.predict_generator(valid_generator, steps=valid_steps)
-        
-        # valid_steps = int(math.ceil(len(valid_df) / batch_size))
-        # valid_generator = DFGenerator(valid_df, terms_dict,
-        #                               nb_classes, batch_size)
-        # logging.info('Predicting')
-        # valid_generator.reset()
-        # preds = model.predict_generator(valid_generator, steps=valid_steps)
-        # valid_df.reset_index()
-        # valid_df['preds'] = list(preds)
-        # train_df.to_pickle('data-cafa/train_data_train.pkl')
-        # valid_df.to_pickle('data-cafa/train_data_valid.pkl')
+        valid_df.reset_index()
+        valid_df['preds'] = list(preds)
+        train_df.to_pickle('data/train_data_train.pkl')
+        valid_df.to_pickle('data/train_data_valid.pkl')
         
     # test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
     # for i, row in enumerate(test_df.itertuples()):
@@ -179,6 +179,13 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     
     # logging.info('Saving predictions')
     # test_df.to_pickle(out_file)
+
+
+def compute_roc(labels, preds):
+    # Compute ROC curve and ROC area for each class
+    fpr, tpr, _ = roc_curve(labels.flatten(), preds.flatten())
+    roc_auc = auc(fpr, tpr)
+    return roc_auc
 
 
 def create_model(nb_classes, params):
