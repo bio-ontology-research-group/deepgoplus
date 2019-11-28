@@ -10,7 +10,7 @@ import math
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import (
     Input, Dense, Embedding, Conv1D, Flatten, Concatenate,
-    MaxPooling1D, Dropout,
+    MaxPooling1D, Dropout, RepeatVector, Layer
 )
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam, RMSprop
@@ -35,7 +35,7 @@ K.set_session(session)
     '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data/train_data.pkl',
+    '--test-data-file', '-tsdf', default='data/test_data.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
     '--terms-file', '-tf', default='data/terms.pkl',
@@ -48,12 +48,12 @@ K.set_session(session)
     help='Result file with predictions for test set')
 @ck.option(
     '--split', '-s', default=0.9,
-    help='train/test split')
+    help='train/valid split')
 @ck.option(
-    '--batch-size', '-bs', default=128,
+    '--batch-size', '-bs', default=32,
     help='Batch size')
 @ck.option(
-    '--epochs', '-e', default=1024,
+    '--epochs', '-e', default=12,
     help='Training epochs')
 @ck.option(
     '--load', '-ld', is_flag=True, help='Load Model?')
@@ -77,7 +77,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         'initializer': 'glorot_normal',
         'dense_depth': 0,
         'nb_filters': 512,
-        'optimizer': Adam(lr=3e-4),
+        'optimizer': Adam(lr=1e-5),
         'loss': 'binary_crossentropy'
     }
     # SLURM JOB ARRAY INDEX
@@ -105,17 +105,20 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     test_df = pd.read_pickle(test_data_file)
     terms_dict = {v: i for i, v in enumerate(terms)}
     nb_classes = len(terms)
-
+    go_matrix = get_go_matrix(go, terms_dict)
     with tf.device('/' + device):
         test_steps = int(math.ceil(len(test_df) / batch_size))
         test_generator = DFGenerator(test_df, terms_dict,
                                      nb_classes, batch_size)
         if load:
             logging.info('Loading pretrained model')
-            model = load_model(model_file)
+            model = load_model(model_file, custom_objects={'GOLayer': GOLayer})
+            # print(go_matrix.shape, model.layers[-3].get_weights()[0].shape)
+            # a = (go_matrix == model.layers[-3].get_weights()[0]).astype(np.int32)
+            # print(a.shape[0] * a.shape[1] - np.sum(a))
         else:
             logging.info('Creating a new model')
-            model = create_model(nb_classes, params)
+            model = create_model(nb_classes, params, go_matrix)
             
             logging.info("Training data size: %d" % len(train_df))
             logging.info("Validation data size: %d" % len(valid_df))
@@ -145,40 +148,40 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
                 workers=12,
                 callbacks=[logger, checkpointer, earlystopper])
             logging.info('Loading best model')
-            model = load_model(model_file)
+            model = load_model(model_file, custom_objects={'GOLayer': GOLayer})
 
     
-        # logging.info('Evaluating model')
-        # loss = model.evaluate_generator(test_generator, steps=test_steps)
-        # logging.info('Test loss %f' % loss)
-        # logging.info('Predicting')
-        # test_generator.reset()
-        # preds = model.predict_generator(test_generator, steps=test_steps)
-        
-        valid_steps = int(math.ceil(len(valid_df) / batch_size))
-        valid_generator = DFGenerator(valid_df, terms_dict,
-                                      nb_classes, batch_size)
+        logging.info('Evaluating model')
+        loss = model.evaluate_generator(test_generator, steps=test_steps)
+        logging.info('Test loss %f' % loss)
         logging.info('Predicting')
-        valid_generator.reset()
-        preds = model.predict_generator(valid_generator, steps=valid_steps)
-        valid_df.reset_index()
-        valid_df['preds'] = list(preds)
-        train_df.to_pickle('data/train_data_train.pkl')
-        valid_df.to_pickle('data/train_data_valid.pkl')
+        test_generator.reset()
+        preds = model.predict_generator(test_generator, steps=test_steps)
         
-    # test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
-    # for i, row in enumerate(test_df.itertuples()):
-    #     for go_id in row.annotations:
-    #         if go_id in terms_dict:
-    #             test_labels[i, terms_dict[go_id]] = 1
-    # logging.info('Computing performance:')
-    # roc_auc = compute_roc(test_labels, preds)
-    # logging.info('ROC AUC: %.2f' % (roc_auc,))
-    # test_df['labels'] = list(test_labels)
-    # test_df['preds'] = list(preds)
+        # valid_steps = int(math.ceil(len(valid_df) / batch_size))
+        # valid_generator = DFGenerator(valid_df, terms_dict,
+        #                               nb_classes, batch_size)
+        # logging.info('Predicting')
+        # valid_generator.reset()
+        # preds = model.predict_generator(valid_generator, steps=valid_steps)
+        # valid_df.reset_index()
+        # valid_df['preds'] = list(preds)
+        # train_df.to_pickle('data/train_data_train.pkl')
+        # valid_df.to_pickle('data/train_data_valid.pkl')
+        
+    test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
+    for i, row in enumerate(test_df.itertuples()):
+        for go_id in row.annotations:
+            if go_id in terms_dict:
+                test_labels[i, terms_dict[go_id]] = 1
+    logging.info('Computing performance:')
+    roc_auc = compute_roc(test_labels, preds)
+    logging.info('ROC AUC: %.2f' % (roc_auc,))
+    test_df['labels'] = list(test_labels)
+    test_df['preds'] = list(preds)
     
-    # logging.info('Saving predictions')
-    # test_df.to_pickle(out_file)
+    logging.info('Saving predictions')
+    test_df.to_pickle(out_file)
 
 
 def compute_roc(labels, preds):
@@ -187,8 +190,46 @@ def compute_roc(labels, preds):
     roc_auc = auc(fpr, tpr)
     return roc_auc
 
+def get_go_matrix(go, terms_dict):
+    nb_classes = len(terms_dict)
+    res = np.zeros((nb_classes, nb_classes), dtype=np.float32)
+    for go_id, i in terms_dict.items():
+        subs = go.get_term_set(go_id)
+        res[i, i] = 1
+        for g_id in subs:
+            if g_id in terms_dict:
+                res[i, terms_dict[g_id]] = 1
+    return res
 
-def create_model(nb_classes, params):
+
+class GOLayer(Layer):
+
+    def __init__(self, nb_classes, **kwargs):
+        self.nb_classes = nb_classes
+        self.go_matrix = np.zeros((nb_classes, nb_classes), dtype=np.float32)
+        super(GOLayer, self).__init__(**kwargs)
+
+    def set_go_matrix(self, go_matrix):
+        self.go_matrix = go_matrix
+
+    def get_config(self):
+        config = super(GOLayer, self).get_config()
+        config['nb_classes'] = self.nb_classes
+        return config
+    
+    def build(self, input_shape):
+        self.kernel = K.variable(
+            self.go_matrix, name='{}_kernel'.format(self.name))
+        self.non_trainable_weights.append(self.kernel)
+        super(GOLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        return tf.math.multiply(x, self.kernel)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+def create_model(nb_classes, params, go_matrix):
     inp_hot = Input(shape=(MAXLEN, 21), dtype=np.float32)
     
     kernels = range(8, params['max_kernel'], 8)
@@ -209,8 +250,13 @@ def create_model(nb_classes, params):
     net = Concatenate(axis=1)(nets)
     for i in range(params['dense_depth']):
         net = Dense(nb_classes, activation='relu', name='dense_' + str(i))(net)
-    output = Dense(nb_classes, activation='sigmoid', name='dense_out')(net)
-
+    net = Dense(nb_classes, activation='sigmoid', name='dense_out')(net)
+    net = RepeatVector(nb_classes)(net)
+    go_layer = GOLayer(nb_classes)
+    go_layer.set_go_matrix(go_matrix)
+    net = go_layer(net)
+    net = MaxPooling1D(pool_size=nb_classes)(net)
+    output = Flatten()(net)
     model = Model(inputs=inp_hot, outputs=output)
     model.summary()
     model.compile(

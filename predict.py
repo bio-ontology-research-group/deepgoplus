@@ -21,7 +21,7 @@ MAXLEN = 2000
 @ck.option('--annotations-file', '-tf', default='data/train_data.pkl', help='Experimental annotations')
 @ck.option('--chunk-size', '-cs', default=1000, help='Number of sequences to read at a time')
 @ck.option('--diamond-file', '-df', default='data/test_diamond.res', help='Diamond Mapping file')
-@ck.option('--threshold', '-t', default=0.0, help='Prediction threshold')
+@ck.option('--threshold', '-t', default=0.1, help='Prediction threshold')
 @ck.option('--batch-size', '-bs', default=32, help='Batch size for prediction model')
 @ck.option('--alpha', '-a', default=0.5, help='Alpha weight parameter')
 def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
@@ -67,9 +67,9 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
     # Load CNN model
     model = load_model(model_file)
     # Alphas for the latest model
-    # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
     # Alphas for the cafa2 model
-    alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
+    # alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
     
     start_time = time.time()
     total_seq = 0
