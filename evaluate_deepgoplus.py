@@ -21,16 +21,16 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa/train_data.pkl',
+    '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa/predictions.pkl',
+    '--test-data-file', '-tsdf', default='data/predictions.pkl',
     help='Test data file')
 @ck.option(
-    '--terms-file', '-tf', default='data-cafa/terms.pkl',
+    '--terms-file', '-tf', default='data/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data-cafa/test_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',
@@ -42,13 +42,15 @@ def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont, alpha):
 
     alpha /= 100.0
-    go_rels = Ontology('data-cafa/go.obo', with_rels=True)
+    go_rels = Ontology('data/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
 
     train_df = pd.read_pickle(train_data_file)
     test_df = pd.read_pickle(test_data_file)
+    print(len(test_df))
+    
     annotations = train_df['annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
     test_annotations = test_df['annotations'].values
@@ -75,6 +77,7 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
+    print('Diamond preds')
     for i, row in enumerate(test_df.itertuples()):
         annots = {}
         prot_id = row.proteins
@@ -106,7 +109,8 @@ def main(train_data_file, test_data_file, terms_file,
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
     # print(len(go_set))
     deep_preds = []
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    alphas = {NAMESPACES['mf']: 0.5, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
@@ -140,7 +144,8 @@ def main(train_data_file, test_data_file, terms_file,
     #             else:
     #                 annots[a_id] = score
     #     deepgo_preds.append(annots)
-    
+
+    print('Computing Fmax')
     fmax = 0.0
     tmax = 0.0
     precisions = []
@@ -148,7 +153,7 @@ def main(train_data_file, test_data_file, terms_file,
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(0, 101):
+    for t in range(1, 101):
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):

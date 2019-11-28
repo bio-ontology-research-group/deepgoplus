@@ -6,21 +6,22 @@ import pandas as pd
 from tensorflow.keras.models import load_model
 from subprocess import Popen, PIPE
 import time
-from utils import Ontology
+from utils import Ontology, NAMESPACES
 from aminoacids import to_onehot
+import gzip
 
 MAXLEN = 2000
 
 @ck.command()
 @ck.option('--in-file', '-if', help='Input FASTA file', required=True)
-@ck.option('--out-file', '-of', default='results.tsv', help='Output result file')
+@ck.option('--out-file', '-of', default='results.tsv.gz', help='Output result file')
 @ck.option('--go-file', '-gf', default='data/go.obo', help='Gene Ontology')
 @ck.option('--model-file', '-mf', default='data/model.h5', help='Tensorflow model file')
 @ck.option('--terms-file', '-tf', default='data/terms.pkl', help='List of predicted terms')
 @ck.option('--annotations-file', '-tf', default='data/train_data.pkl', help='Experimental annotations')
 @ck.option('--chunk-size', '-cs', default=1000, help='Number of sequences to read at a time')
 @ck.option('--diamond-file', '-df', default='data/test_diamond.res', help='Diamond Mapping file')
-@ck.option('--threshold', '-t', default=0.0, help='Prediction threshold')
+@ck.option('--threshold', '-t', default=0.1, help='Prediction threshold')
 @ck.option('--batch-size', '-bs', default=32, help='Batch size for prediction model')
 @ck.option('--alpha', '-a', default=0.5, help='Alpha weight parameter')
 def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
@@ -38,7 +39,7 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
 
     diamond_preds = {}
     mapping = {}
-    with open(diamond_file, 'r') as f:
+    with gzip.open(diamond_file, 'rt') as f:
         for line in f:
             it = line.strip().split()
             if it[0] not in mapping:
@@ -65,10 +66,14 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
     
     # Load CNN model
     model = load_model(model_file)
-
+    # Alphas for the latest model
+    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    # Alphas for the cafa2 model
+    # alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
+    
     start_time = time.time()
     total_seq = 0
-    w = open(out_file, 'w')
+    w = gzip.open(out_file, 'wt')
     for prot_ids, sequences in read_fasta(in_file, chunk_size):
         total_seq += len(prot_ids)
         deep_preds = {}
@@ -92,12 +97,12 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
             annots = {}
             if prot_id in diamond_preds:
                 for go_id, score in diamond_preds[prot_id].items():
-                    annots[go_id] = score * alpha
+                    annots[go_id] = score * alphas[go.get_namespace(go_id)]
             for go_id, score in deep_preds[prot_id].items():
                 if go_id in annots:
-                    annots[go_id] += (1 - alpha) * score
+                    annots[go_id] += (1 - alphas[go.get_namespace(go_id)]) * score
                 else:
-                    annots[go_id] = (1 - alpha) * score
+                    annots[go_id] = (1 - alphas[go.get_namespace(go_id)]) * score
             # Propagate scores with ontology structure
             gos = list(annots.keys())
             for go_id in gos:
@@ -122,7 +127,7 @@ def read_fasta(filename, chunk_size):
     info = list()
     seq = ''
     inf = ''
-    with open(filename) as f:
+    with gzip.open(filename, 'rt') as f:
         for line in f:
             line = line.strip()
             if line.startswith('>'):

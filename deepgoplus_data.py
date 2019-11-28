@@ -14,10 +14,10 @@ logging.basicConfig(level=logging.INFO)
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/swissprot_exp201601.pkl',
+    '--old-data-file', '-oldf', default='data/swissprot_exp_2019_03.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
-    '--new-data-file', '-ndf', default='data/swissprot_exp201610.pkl',
+    '--new-data-file', '-ndf', default='data/swissprot_exp_2019_10.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
     '--out-terms-file', '-otf', default='data/terms.pkl',
@@ -73,17 +73,16 @@ def main(go_file, old_data_file, new_data_file,
     df.to_pickle(out_terms_file)
 
     # Save testing data
-    # df = pd.read_pickle(new_data_file)
+    df = pd.read_pickle(new_data_file)
 
-    # index = []
-    # for i, row in enumerate(df.itertuples()):
-    #     p_id = row.proteins
-    #     if p_id not in train_prots:
-    #         index.append(i)
-    # df = df.iloc[index]
-    
-    # df.to_pickle(test_data_file)
-
+    index = []
+    for i, row in enumerate(df.itertuples()):
+        p_id = row.proteins
+        if p_id not in train_prots:
+            index.append(i)
+    df = df.iloc[index]
+    print('Number of test proteins', len(df))
+    df.to_pickle(test_data_file)
                 
 
 
