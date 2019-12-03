@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/swissprot_exp_2019_03.pkl',
+    '--old-data-file', '-oldf', default='data/swissprot_exp_2019_01.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
     '--new-data-file', '-ndf', default='data/swissprot_exp_2019_10.pkl',
@@ -43,7 +43,7 @@ def main(go_file, old_data_file, new_data_file,
     cnt = Counter()
     annotations = list()
     for i, row in df.iterrows():
-        for term in row['annotations']:
+        for term in row['prop_annotations']:
             cnt[term] += 1
     
     train_prots = set()

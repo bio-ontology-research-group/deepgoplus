@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv2/
 
 # Spyder project settings
 .spyderproject
@@ -106,10 +107,9 @@ venv.bak/
 # Data folder
 data/
 data-*/
-
+data.tar.gz
 deepwalk
 
 *.pkl
 *.pdf
 *.out
-

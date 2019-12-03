@@ -77,7 +77,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         'initializer': 'glorot_normal',
         'dense_depth': 0,
         'nb_filters': 512,
-        'optimizer': Adam(lr=1e-5),
+        'optimizer': Adam(lr=3e-4),
         'loss': 'binary_crossentropy'
     }
     # SLURM JOB ARRAY INDEX
@@ -171,7 +171,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         
     test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
     for i, row in enumerate(test_df.itertuples()):
-        for go_id in row.annotations:
+        for go_id in row.prop_annotations:
             if go_id in terms_dict:
                 test_labels[i, terms_dict[go_id]] = 1
     logging.info('Computing performance:')
@@ -251,13 +251,13 @@ def create_model(nb_classes, params, go_matrix):
     for i in range(params['dense_depth']):
         net = Dense(nb_classes, activation='relu', name='dense_' + str(i))(net)
     net = Dense(nb_classes, activation='sigmoid', name='dense_out')(net)
-    net = RepeatVector(nb_classes)(net)
-    go_layer = GOLayer(nb_classes)
-    go_layer.set_go_matrix(go_matrix)
-    net = go_layer(net)
-    net = MaxPooling1D(pool_size=nb_classes)(net)
-    output = Flatten()(net)
-    model = Model(inputs=inp_hot, outputs=output)
+    # net = RepeatVector(nb_classes)(net)
+    # go_layer = GOLayer(nb_classes)
+    # go_layer.set_go_matrix(go_matrix)
+    # net = go_layer(net)
+    # net = MaxPooling1D(pool_size=nb_classes)(net)
+    # output = Flatten()(net)
+    model = Model(inputs=inp_hot, outputs=net)
     model.summary()
     model.compile(
         optimizer=params['optimizer'],
@@ -310,7 +310,7 @@ class DFGenerator(object):
                 seq = row.sequences
                 onehot = to_onehot(seq)
                 data_onehot[i, :, :] = onehot
-                for t_id in row.annotations:
+                for t_id in row.prop_annotations:
                     if t_id in self.terms_dict:
                         labels[i, self.terms_dict[t_id]] = 1
             self.start += self.batch_size

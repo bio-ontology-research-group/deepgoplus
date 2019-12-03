@@ -19,18 +19,9 @@ ORGS = set(['HUMAN', 'MOUSE', ])
     '--uniprot-file', '-uf', default='data/uniprot_sprot.dat.gz',
     help='UniProt knowledgebase file in text format (archived)')
 @ck.option(
-    '--filter_exp', '-fe', is_flag=True,
-    help='Filter proteins with experimental annotations')
-@ck.option(
-    '--prop-annots', '-pa', is_flag=True,
-    help='Propagate annotations with GO structure')
-@ck.option(
-    '--cafa-targets', '-ct', is_flag=True,
-    help='Filter CAFA Target proteins')
-@ck.option(
     '--out-file', '-o', default='data/swissprot.pkl',
     help='Result file with a list of proteins, sequences and annotations')
-def main(go_file, uniprot_file, filter_exp, prop_annots, cafa_targets, out_file):
+def main(go_file, uniprot_file, out_file):
     go = Ontology(go_file, with_rels=True)
 
     proteins, accessions, sequences, annotations, interpros, orgs = load_data(uniprot_file)
@@ -43,46 +34,42 @@ def main(go_file, uniprot_file, filter_exp, prop_annots, cafa_targets, out_file)
         'orgs': orgs
     })
 
-    if filter_exp:
-        logging.info('Filtering proteins with experimental annotations')
-        index = []
-        annotations = []
-        for i, row in enumerate(df.itertuples()):
-            annots = []
-            for annot in row.annotations:
-                go_id, code = annot.split('|')
-                if is_exp_code(code):
-                    annots.append(go_id)
-            # Ignore proteins without experimental annotations
-            if len(annots) == 0:
-                continue
-            index.append(i)
-            annotations.append(annots)
-        df = df.iloc[index]
-        df = df.reset_index()
-        df['annotations'] = annotations
+    logging.info('Filtering proteins with experimental annotations')
+    index = []
+    annotations = []
+    for i, row in enumerate(df.itertuples()):
+        annots = []
+        for annot in row.annotations:
+            go_id, code = annot.split('|')
+            if is_exp_code(code):
+                annots.append(go_id)
+        # Ignore proteins without experimental annotations
+        if len(annots) == 0:
+            continue
+        index.append(i)
+        annotations.append(annots)
+    df = df.iloc[index]
+    df = df.reset_index()
+    df['exp_annotations'] = annotations
 
-    if cafa_targets:
-        logging.info('Filtering cafa target proteins')
-        index = []
-        for i, row in enumerate(df.itertuples()):
-            if is_cafa_target(row.orgs):
-                index.append(i)
-        df = df.iloc[index]
-        df = df.reset_index()
-        
-    if prop_annots:
-        prop_annotations = []
-        for i, row in df.iterrows():
-            # Propagate annotations
-            annot_set = set()
-            annots = row['annotations']
-            for go_id in annots:
-                go_id = go_id.split('|')[0] # In case if it has code
-                annot_set |= go.get_anchestors(go_id)
-            annots = list(annot_set)
-            prop_annotations.append(annots)
-        df['annotations'] = prop_annotations
+    prop_annotations = []
+    for i, row in df.iterrows():
+        # Propagate annotations
+        annot_set = set()
+        annots = row['exp_annotations']
+        for go_id in annots:
+            annot_set |= go.get_anchestors(go_id)
+        annots = list(annot_set)
+        prop_annotations.append(annots)
+    df['prop_annotations'] = prop_annotations
+
+    cafa_target = []
+    for i, row in enumerate(df.itertuples()):
+        if is_cafa_target(row.orgs):
+            cafa_target.append(True)
+        else:
+            cafa_target.append(False)
+    df['cafa_target'] = cafa_target
     
     df.to_pickle(out_file)
     logging.info('Successfully saved %d proteins' % (len(df),) )

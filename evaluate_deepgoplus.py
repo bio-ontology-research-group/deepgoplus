@@ -51,9 +51,9 @@ def main(train_data_file, test_data_file, terms_file,
     test_df = pd.read_pickle(test_data_file)
     print(len(test_df))
     
-    annotations = train_df['annotations'].values
+    annotations = train_df['prop_annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
-    test_annotations = test_df['annotations'].values
+    test_annotations = test_df['prop_annotations'].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
     go_rels.calculate_ic(annotations + test_annotations)
 
@@ -105,12 +105,12 @@ def main(train_data_file, test_data_file, terms_file,
     # DeepGOPlus
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])
-    labels = test_df['annotations'].values
+    labels = test_df['prop_annotations'].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
     # print(len(go_set))
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    alphas = {NAMESPACES['mf']: 0.5, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
+    alphas = {NAMESPACES['mf']: 0.5, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
