@@ -110,7 +110,7 @@ def main(train_data_file, test_data_file, terms_file,
     # print(len(go_set))
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    alphas = {NAMESPACES['mf']: 0.5, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
+    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
@@ -153,7 +153,7 @@ def main(train_data_file, test_data_file, terms_file,
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(1, 101):
+    for t in range(10, 30):
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
