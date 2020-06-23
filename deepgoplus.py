@@ -152,8 +152,8 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         loss = model.evaluate_generator(test_generator, steps=test_steps)
         logging.info('Test loss %f' % loss)
         logging.info('Predicting')
-        valid_generator.reset()
-        preds = model.predict_generator(valid_generator, steps=valid_steps)
+        test_generator.reset()
+        preds = model.predict_generator(test_generator, steps=test_steps)
         
         # valid_steps = int(math.ceil(len(valid_df) / batch_size))
         # valid_generator = DFGenerator(valid_df, terms_dict,
@@ -166,19 +166,19 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
         # train_df.to_pickle('data-cafa/train_data_train.pkl')
         # valid_df.to_pickle('data-cafa/train_data_valid.pkl')
         
-    # test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
-    # for i, row in enumerate(test_df.itertuples()):
-    #     for go_id in row.annotations:
-    #         if go_id in terms_dict:
-    #             test_labels[i, terms_dict[go_id]] = 1
-    # logging.info('Computing performance:')
-    # roc_auc = compute_roc(test_labels, preds)
-    # logging.info('ROC AUC: %.2f' % (roc_auc,))
-    # test_df['labels'] = list(test_labels)
-    # test_df['preds'] = list(preds)
+    test_labels = np.zeros((len(test_df), nb_classes), dtype=np.int32)
+    for i, row in enumerate(test_df.itertuples()):
+        for go_id in row.annotations:
+            if go_id in terms_dict:
+                test_labels[i, terms_dict[go_id]] = 1
+    logging.info('Computing performance:')
+    roc_auc = compute_roc(test_labels, preds)
+    logging.info('ROC AUC: %.2f' % (roc_auc,))
+    test_df['labels'] = list(test_labels)
+    test_df['preds'] = list(preds)
     
-    # logging.info('Saving predictions')
-    # test_df.to_pickle(out_file)
+    logging.info('Saving predictions')
+    test_df.to_pickle(out_file)
 
 
 def create_model(nb_classes, params):
