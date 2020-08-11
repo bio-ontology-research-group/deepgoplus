@@ -12,6 +12,7 @@ import gzip
 import os
 import sys
 import logging
+import subprocess
 
 MAXLEN = 2000
 
@@ -67,9 +68,20 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     for row in df.itertuples():
         annotations[row.proteins] = set(row.annotations)
 
+    # Generate diamond predictions
+    cmd = [
+        "diamond", "blastp",  "-d", diamond_db, "--more-sensitive",
+        "-q", in_file, "--outfmt", "6 qseqid sseqid bitscore", ">",
+        diamond_file]
+    proc = subprocess.run(cmd, capture_output=False)
+
+    if proc.returncode != 0:
+        logging.error('Error running diamond!')
+        sys.exit(1)
+
     diamond_preds = {}
     mapping = {}
-    with gzip.open(diamond_file, 'rt') as f:
+    with open(diamond_file, 'r') as f:
         for line in f:
             it = line.strip().split()
             if it[0] not in mapping:
@@ -103,7 +115,7 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     
     start_time = time.time()
     total_seq = 0
-    w = gzip.open(out_file, 'wt')
+    w = open(out_file, 'w')
     for prot_ids, sequences in read_fasta(in_file, chunk_size):
         total_seq += len(prot_ids)
         deep_preds = {}
