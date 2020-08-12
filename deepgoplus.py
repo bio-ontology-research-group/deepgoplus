@@ -179,7 +179,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     logging.info('Saving predictions')
     test_df.to_pickle(out_file)
 
-
 def compute_roc(labels, preds):
     # Compute ROC curve and ROC area for each class
     fpr, tpr, _ = roc_curve(labels.flatten(), preds.flatten())
