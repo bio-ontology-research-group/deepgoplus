@@ -112,10 +112,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
                                      nb_classes, batch_size)
         if load:
             logging.info('Loading pretrained model')
-            model = load_model(model_file, custom_objects={'GOLayer': GOLayer})
-            # print(go_matrix.shape, model.layers[-3].get_weights()[0].shape)
-            # a = (go_matrix == model.layers[-3].get_weights()[0]).astype(np.int32)
-            # print(a.shape[0] * a.shape[1] - np.sum(a))
+            model = load_model(model_file)
         else:
             logging.info('Creating a new model')
             model = create_model(nb_classes, params, go_matrix)
@@ -148,7 +145,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
                 workers=12,
                 callbacks=[logger, checkpointer, earlystopper])
             logging.info('Loading best model')
-            model = load_model(model_file, custom_objects={'GOLayer': GOLayer})
+            model = load_model(model_file)
 
     
         logging.info('Evaluating model')
@@ -190,44 +187,6 @@ def compute_roc(labels, preds):
     roc_auc = auc(fpr, tpr)
     return roc_auc
 
-def get_go_matrix(go, terms_dict):
-    nb_classes = len(terms_dict)
-    res = np.zeros((nb_classes, nb_classes), dtype=np.float32)
-    for go_id, i in terms_dict.items():
-        subs = go.get_term_set(go_id)
-        res[i, i] = 1
-        for g_id in subs:
-            if g_id in terms_dict:
-                res[i, terms_dict[g_id]] = 1
-    return res
-
-
-class GOLayer(Layer):
-
-    def __init__(self, nb_classes, **kwargs):
-        self.nb_classes = nb_classes
-        self.go_matrix = np.zeros((nb_classes, nb_classes), dtype=np.float32)
-        super(GOLayer, self).__init__(**kwargs)
-
-    def set_go_matrix(self, go_matrix):
-        self.go_matrix = go_matrix
-
-    def get_config(self):
-        config = super(GOLayer, self).get_config()
-        config['nb_classes'] = self.nb_classes
-        return config
-    
-    def build(self, input_shape):
-        self.kernel = K.variable(
-            self.go_matrix, name='{}_kernel'.format(self.name))
-        self.non_trainable_weights.append(self.kernel)
-        super(GOLayer, self).build(input_shape)  # Be sure to call this at the end
-
-    def call(self, x):
-        return tf.math.multiply(x, self.kernel)
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
 
 def create_model(nb_classes, params, go_matrix):
     inp_hot = Input(shape=(MAXLEN, 21), dtype=np.float32)
@@ -251,12 +210,6 @@ def create_model(nb_classes, params, go_matrix):
     for i in range(params['dense_depth']):
         net = Dense(nb_classes, activation='relu', name='dense_' + str(i))(net)
     net = Dense(nb_classes, activation='sigmoid', name='dense_out')(net)
-    # net = RepeatVector(nb_classes)(net)
-    # go_layer = GOLayer(nb_classes)
-    # go_layer.set_go_matrix(go_matrix)
-    # net = go_layer(net)
-    # net = MaxPooling1D(pool_size=nb_classes)(net)
-    # output = Flatten()(net)
     model = Model(inputs=inp_hot, outputs=net)
     model.summary()
     model.compile(
