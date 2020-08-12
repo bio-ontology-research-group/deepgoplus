@@ -66,14 +66,14 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     annotations = {}
     df = pd.read_pickle(annotations_file)
     for row in df.itertuples():
-        annotations[row.proteins] = set(row.annotations)
+        annotations[row.proteins] = set(row.exp_annotations)
 
     # Generate diamond predictions
     cmd = [
         "diamond", "blastp",  "-d", diamond_db, "--more-sensitive",
-        "-q", in_file, "--outfmt", "6 qseqid sseqid bitscore", ">",
+        "-q", in_file, "--outfmt", "6", "qseqid", "sseqid", "bitscore", "-o",
         diamond_file]
-    proc = subprocess.run(cmd, capture_output=False)
+    proc = subprocess.run(cmd)
 
     if proc.returncode != 0:
         logging.error('Error running diamond!')
@@ -139,7 +139,8 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
             annots = {}
             if prot_id in diamond_preds:
                 for go_id, score in diamond_preds[prot_id].items():
-                    annots[go_id] = score * alphas[go.get_namespace(go_id)]
+                    if go.has_term(go_id):
+                        annots[go_id] = score * alphas[go.get_namespace(go_id)]
             for go_id, score in deep_preds[prot_id].items():
                 if go_id in annots:
                     annots[go_id] += (1 - alphas[go.get_namespace(go_id)]) * score
@@ -169,7 +170,7 @@ def read_fasta(filename, chunk_size):
     info = list()
     seq = ''
     inf = ''
-    with gzip.open(filename, 'rt') as f:
+    with open(filename, 'r') as f:
         for line in f:
             line = line.strip()
             if line.startswith('>'):
