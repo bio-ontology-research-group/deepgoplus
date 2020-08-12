@@ -105,7 +105,6 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     test_df = pd.read_pickle(test_data_file)
     terms_dict = {v: i for i, v in enumerate(terms)}
     nb_classes = len(terms)
-    go_matrix = get_go_matrix(go, terms_dict)
     with tf.device('/' + device):
         test_steps = int(math.ceil(len(test_df) / batch_size))
         test_generator = DFGenerator(test_df, terms_dict,
@@ -115,7 +114,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
             model = load_model(model_file)
         else:
             logging.info('Creating a new model')
-            model = create_model(nb_classes, params, go_matrix)
+            model = create_model(nb_classes, params)
             
             logging.info("Training data size: %d" % len(train_df))
             logging.info("Validation data size: %d" % len(valid_df))
@@ -188,7 +187,7 @@ def compute_roc(labels, preds):
     return roc_auc
 
 
-def create_model(nb_classes, params, go_matrix):
+def create_model(nb_classes, params):
     inp_hot = Input(shape=(MAXLEN, 21), dtype=np.float32)
     
     kernels = range(8, params['max_kernel'], 8)
