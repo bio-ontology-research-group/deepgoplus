@@ -24,7 +24,7 @@ MAXLEN = 2000
 @ck.option('--model-file', '-mf', default='model.h5', help='Tensorflow model file')
 @ck.option('--terms-file', '-tf', default='terms.pkl', help='List of predicted terms')
 @ck.option('--annotations-file', '-tf', default='train_data.pkl', help='Experimental annotations')
-@ck.option('--diamond-db', '-dd', default='diamond.db', help='Diamond Mapping file')
+@ck.option('--diamond-db', '-dd', default='train_data.dmnd', help='Diamond Database file')
 @ck.option('--diamond-file', '-df', default='diamond.res', help='Diamond Mapping file')
 @ck.option('--chunk-size', '-cs', default=1000, help='Number of sequences to read at a time')
 @ck.option('--threshold', '-t', default=0.1, help='Prediction threshold')

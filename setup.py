@@ -16,7 +16,7 @@ except ImportError:
     tagger = egg_info_cmd.egg_info
 
 install_requires = [
-    "click < 8", "scikit-learn < 0.21", "pandas < 0.24", "tensorflow < 1.14",
+    "click < 8", "scikit-learn < 0.21", "pandas < 0.24", "tensorflow < 1.13",
     "numpy < 2.0", "scipy < 1.3" 
 ]
 
@@ -45,5 +45,5 @@ setup(
     },
     zip_safe=True,
     cmdclass={"egg_info": tagger},
-    python_requires=">=3.6, <4",
+    python_requires=">=3.6, <3.7",
 )
