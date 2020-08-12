@@ -31,6 +31,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Maxat Kulmanov",
     author_email="maxat.kulmanov@kaust.edu.sa",
+    download_url="https://github.com/bio-ontology-research-group/deepgoplus/archive/v1.0.0.tar.gz",
     license="Apache 2.0",
     packages=["deepgoplus",],
     package_data={"deepgoplus": [],},
