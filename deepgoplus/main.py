@@ -19,7 +19,7 @@ MAXLEN = 2000
 @ck.command()
 @ck.option('--data-root', '-dr', default='data/', help='Data root folder', required=True)
 @ck.option('--in-file', '-if', help='Input FASTA file', required=True)
-@ck.option('--out-file', '-of', default='results.tsv.gz', help='Output result file')
+@ck.option('--out-file', '-of', default='results.tsv', help='Output result file')
 @ck.option('--go-file', '-gf', default='go.obo', help='Gene Ontology')
 @ck.option('--model-file', '-mf', default='model.h5', help='Tensorflow model file')
 @ck.option('--terms-file', '-tf', default='terms.pkl', help='List of predicted terms')
