@@ -70,7 +70,7 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
 
     # Generate diamond predictions
     cmd = [
-        "diamond", "blastp",  "-d", diamond_db, "--more-sensitive",
+        "diamond", "blastp",  "-d", diamond_db, "--more-sensitive", "-t", "/tmp",
         "-q", in_file, "--outfmt", "6", "qseqid", "sseqid", "bitscore", "-o",
         diamond_file]
     proc = subprocess.run(cmd)
