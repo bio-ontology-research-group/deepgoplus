@@ -9,9 +9,11 @@ DeepGOPlus model together with the scripts for evaluating the model's
 performance.
 
 ## Dependencies
-The code was developed and tested using python 3.6.
-To install python dependencies run:
-pip install -r requirements.txt
+* The code was developed and tested using python 3.6.
+* To install python dependencies run:
+  `pip install -r requirements.txt`
+* Install [diamond](https://github.com/bbuchfink/diamond) program on your system (diamond command should be available)
+
 
 ## Data
 * http://deepgoplus.bio2vec.net/data/ - Here you can find the data
@@ -20,6 +22,14 @@ used to train and evaluate our method.
  * data-cafa.tar.gz - CAFA3 challenge dataset
  * data-2016.tar.gz - Dataset which is used to compare DeepGOPlus with
    GOLabeler and DeepText2GO
+
+## Installation
+`pip install deepgoplus`
+
+## Running
+* Download all the files from http://deepgoplus.bio2vec.net/data/data.tar.gz and place them into data folder
+* `deepgoplus --data-root <path_to_data_folder> --in-file <input_fasta_filename>`
+
 
 ## Scripts
 The scripts require GeneOntology in OBO Format.
@@ -30,10 +40,6 @@ database format to pandas dataframe.
 * deepgoplus.py - This script is used to train the model
 * evaluate_*.py - The scripts are used to compute Fmax, Smin and AUPR
 
-## Running
-* Download all the files from http://deepgoplus.bio2vec.net/data/data.tar.gz and place them into data folder
-* Install [diamond](https://github.com/bbuchfink/diamond) program on your system (diamond command should be available)
-* run predict.sh <input_fasta_filename> <results_filename>
 
 The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 
