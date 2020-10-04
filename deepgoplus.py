@@ -12,6 +12,7 @@ from tensorflow.keras.layers import (
     Input, Dense, Embedding, Conv1D, Flatten, Concatenate,
     MaxPooling1D, Dropout, RepeatVector, Layer
 )
+from tensorflow.keras.utils import Sequence
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
@@ -22,10 +23,15 @@ from aminoacids import to_ngrams, to_onehot, MAXLEN
 
 logging.basicConfig(level=logging.INFO)
 
-config = tf.ConfigProto(allow_soft_placement=True)
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config)
-K.set_session(session)
+
+
+# config = tf.ConfigProto(allow_soft_placement=True) not required if 
+tf.config.set_soft_device_placement(True)
+
+
+# config.gpu_options.allow_growth = True
+# session = tf.Session(config=config)
+# K.set_session(session)
 
 @ck.command()
 @ck.option(
@@ -134,7 +140,7 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
                                           nb_classes, batch_size)
     
             model.summary()
-            model.fit_generator(
+            model.fit(
                 train_generator,
                 steps_per_epoch=train_steps,
                 epochs=epochs,
@@ -234,7 +240,7 @@ def load_data(data_file, terms, split):
     return train_df, valid_df
     
 
-class DFGenerator(object):
+class DFGenerator(Sequence):
 
     def __init__(self, df, terms_dict, nb_classes, batch_size):
         self.start = 0
@@ -243,7 +249,29 @@ class DFGenerator(object):
         self.batch_size = batch_size
         self.nb_classes = nb_classes
         self.terms_dict = terms_dict
-        
+
+
+    ### copied from deepgopp    
+    def __len__(self):                                                                                                                   
+        return np.ceil(len(self.df) / float(self.batch_size)).astype(np.int32)   
+
+    def __getitem__(self, idx):                                                                                                          
+        batch_index = np.arange(                                                                                                         
+            idx * self.batch_size, min(self.size, (idx + 1) * self.batch_size))                                                          
+        df = self.df.iloc[batch_index]                                                                                                   
+        data_onehot = np.zeros((len(df), MAXLEN, 21), dtype=np.float32)
+        labels = np.zeros((len(df), self.nb_classes), dtype=np.int32)
+        for i, row in enumerate(df.itertuples()):
+            seq = row.sequences
+            onehot = to_onehot(seq)
+            data_onehot[i, :, :] = onehot
+            for t_id in row.prop_annotations:
+                if t_id in self.terms_dict:
+                    labels[i, self.terms_dict[t_id]] = 1
+        self.start += self.batch_size
+        return (data_onehot, labels)
+    ###################
+
     def __next__(self):
         return self.next()
 

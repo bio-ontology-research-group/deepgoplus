@@ -16,15 +16,15 @@ ORGS = set(['HUMAN', 'MOUSE', ])
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--uniprot-file', '-uf', default='data/uniprot_sprot.dat.gz',
-    help='UniProt knowledgebase file in text format (archived)')
+    '--swissprot-file', '-sf', default='data/swissprot.dat.gz',
+    help='UniProt/SwissProt knowledgebase file in text format (archived)')
 @ck.option(
     '--out-file', '-o', default='data/swissprot.pkl',
     help='Result file with a list of proteins, sequences and annotations')
-def main(go_file, uniprot_file, out_file):
+def main(go_file, swissprot_file, out_file):
     go = Ontology(go_file, with_rels=True)
 
-    proteins, accessions, sequences, annotations, interpros, orgs = load_data(uniprot_file)
+    proteins, accessions, sequences, annotations, interpros, orgs = load_data(swissprot_file)
     df = pd.DataFrame({
         'proteins': proteins,
         'accessions': accessions,
@@ -74,14 +74,14 @@ def main(go_file, uniprot_file, out_file):
     df.to_pickle(out_file)
     logging.info('Successfully saved %d proteins' % (len(df),) )
     
-def load_data(uniprot_file):
+def load_data(swissprot_file):
     proteins = list()
     accessions = list()
     sequences = list()
     annotations = list()
     interpros = list()
     orgs = list()
-    with gzip.open(uniprot_file, 'rt') as f:
+    with gzip.open(swissprot_file, 'rt') as f:
         prot_id = ''
         prot_ac = ''
         seq = ''

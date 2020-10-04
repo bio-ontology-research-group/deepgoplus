@@ -14,10 +14,10 @@ logging.basicConfig(level=logging.INFO)
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/swissprot_exp_2019_01.pkl',
+    '--old-data-file', '-oldf', default='data/swissprot.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
-    '--new-data-file', '-ndf', default='data/swissprot_exp_2019_10.pkl',
+    '--new-data-file', '-ndf', default='data/swissprot.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
     '--out-terms-file', '-otf', default='data/terms.pkl',
