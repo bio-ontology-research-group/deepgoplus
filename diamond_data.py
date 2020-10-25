@@ -13,10 +13,10 @@ logging.basicConfig(level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--data-file', '-df', default='data/swissprot_exp.pkl',
+    '--data-file', '-df', default='data/swissprot.pkl',
     help='Pandas dataframe with protein sequences')
 @ck.option(
-    '--out-file', '-o', default='data/swissprot_exp.fa',
+    '--out-file', '-o', default='data/swissprot.fa',
     help='Fasta file')
 def main(data_file, out_file):
     # Load interpro data

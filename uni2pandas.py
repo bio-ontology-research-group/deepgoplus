@@ -16,7 +16,7 @@ ORGS = set(['HUMAN', 'MOUSE', ])
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--swissprot-file', '-sf', default='data/swissprot.dat.gz',
+    '--swissprot-file', '-sf', default='data/uniprot_sprot.dat.gz',
     help='UniProt/SwissProt knowledgebase file in text format (archived)')
 @ck.option(
     '--out-file', '-o', default='data/swissprot.pkl',

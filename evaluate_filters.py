@@ -13,12 +13,12 @@ import math
 MAXLEN = 2000
 
 @ck.command()
-@ck.option('--model-file', '-mf', default='data-cafa/model.h5', help='Tensorflow model file')
-@ck.option('--terms-file', '-tf', default='data-cafa/terms.pkl', help='List of predicted terms')
-@ck.option('--annotations-file', '-tf', default='data-cafa/train_data.pkl', help='Experimental annotations')
+@ck.option('--model-file', '-mf', default='data/model.h5', help='Tensorflow model file')
+@ck.option('--terms-file', '-tf', default='data/terms.pkl', help='List of predicted terms')
+@ck.option('--annotations-file', '-tf', default='data/train_data.pkl', help='Experimental annotations')
 def main(model_file, terms_file, annotations_file):
 
-    go_rels = Ontology('data-cafa/go.obo', with_rels=True)
+    go_rels = Ontology('data/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
 

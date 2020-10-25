@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/swissprot.pkl',
+    '--old-data-file', '-oldf', default='data/old_swissprot.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
     '--new-data-file', '-ndf', default='data/swissprot.pkl',
@@ -37,6 +37,7 @@ def main(go_file, old_data_file, new_data_file,
     logging.info('GO loaded')
 
     df = pd.read_pickle(old_data_file)
+    print("OLD DATA FILE" ,len(df))
     
     logging.info('Processing annotations')
     
@@ -74,11 +75,14 @@ def main(go_file, old_data_file, new_data_file,
 
     # Save testing data
     df = pd.read_pickle(new_data_file)
+    print("NEW DATA FILE" ,len(df))
+    
 
     index = []
     for i, row in enumerate(df.itertuples()):
         p_id = row.proteins
         if p_id not in train_prots:
+            print(i)
             index.append(i)
     df = df.iloc[index]
     print('Number of test proteins', len(df))

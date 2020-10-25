@@ -176,7 +176,7 @@ def main(train_data_file, test_data_file, terms_file,
         print(f'{avg_fp} {avg_ic}')
         precisions.append(prec)
         recalls.append(rec)
-        print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
+        # print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
         if fmax < fscore:
             fmax = fscore
             tmax = threshold
@@ -200,9 +200,9 @@ def main(train_data_file, test_data_file, terms_file,
     plt.ylabel('Precision')
     plt.title('Area Under the Precision-Recall curve')
     plt.legend(loc="lower right")
-    plt.savefig(f'aupr_{ont}_{alpha:0.2f}.pdf')
+    plt.savefig(f'results/aupr_{ont}_{alpha:0.2f}.pdf')
     df = pd.DataFrame({'precisions': precisions, 'recalls': recalls})
-    df.to_pickle(f'PR_{ont}_{alpha:0.2f}.pkl')
+    df.to_pickle(f'results/PR_{ont}_{alpha:0.2f}.pkl')
 
 def compute_roc(labels, preds):
     # Compute ROC curve and ROC area for each class

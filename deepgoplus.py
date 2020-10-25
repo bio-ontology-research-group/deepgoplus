@@ -59,7 +59,7 @@ tf.config.set_soft_device_placement(True)
     '--batch-size', '-bs', default=32,
     help='Batch size')
 @ck.option(
-    '--epochs', '-e', default=12,
+    '--epochs', '-e', default=1,
     help='Training epochs')
 @ck.option(
     '--load', '-ld', is_flag=True, help='Load Model?')
@@ -154,11 +154,11 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
 
     
         logging.info('Evaluating model')
-        loss = model.evaluate_generator(test_generator, steps=test_steps)
+        loss = model.evaluate(test_generator, steps=test_steps)
         logging.info('Test loss %f' % loss)
         logging.info('Predicting')
         test_generator.reset()
-        preds = model.predict_generator(test_generator, steps=test_steps)
+        preds = model.predict(test_generator, steps=test_steps)
         
         # valid_steps = int(math.ceil(len(valid_df) / batch_size))
         # valid_generator = DFGenerator(valid_df, terms_dict,
@@ -269,6 +269,8 @@ class DFGenerator(Sequence):
                 if t_id in self.terms_dict:
                     labels[i, self.terms_dict[t_id]] = 1
         self.start += self.batch_size
+        print("GETITEM " + str(idx) + "\t\t" + str(len(self)))
+        print(data_onehot, labels)
         return (data_onehot, labels)
     ###################
 

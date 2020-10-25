@@ -29,13 +29,13 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
+    '--train-data-file', '-trdf', default='data/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data-cafa3/test_data.pkl',
+    '--test-data-file', '-tsdf', default='data/test_data.pkl',
     help='Data file with test')
 @ck.option(
-    '--diamond-scores-file', '-dsf', default='data-cafa3/test_diamond.res',
+    '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
     help='Diamond output')
 @ck.option(
     '--ont', '-o', default='mf',

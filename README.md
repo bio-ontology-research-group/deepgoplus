@@ -48,3 +48,17 @@ The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 If you use DeepGOPlus for your research, or incorporate our learning algorithms in your work, please cite:
 Maxat Kulmanov, Robert Hoehndorf; DeepGOPlus: Improved protein function prediction from sequence, Bioinformatics, https://doi.org/10.1093/bioinformatics/btz595
 
+
+
+## New version specifications
+Current dependencies can be found in the requirements.txt file.
+The used Python version is 3.7.9.
+Current version of Tensorflow will require Cuda 10.1 and Cudnn 7.6.5
+
+
+## Updating
+
+The following scripts must be run to update the model using the latest versions of the Gene Ontology (GO) and the SwissProt Database.
+
+* update.py - This will download new releases of GO and SwissProt and train the model. If there are not new releases, the process will abort.
+* new_evaluation.sh - This will compute Fmax, Smin and AUPR metrics. 
