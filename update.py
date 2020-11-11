@@ -43,12 +43,18 @@ def download_data():
 
             print(f'Proceeding to download Gene Ontology file go.obo from http://purl.obolibrary.org/obo/go.obo')
             urlGO = 'http://purl.obolibrary.org/obo/go.obo'
-            wget.download(urlGO, 'data/go.obo')
+             
+            cmd = ["rm", "data/go.obo"]
+            proc = subprocess.run(cmd)
+            wget.download(urlGO, out = 'data/go.obo')
+        
         
             print(f'\nProceeding to download SwissProt file')
             urlSwiss = 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz'
 
-            wget.download(urlSwiss, 'data/uniprot_sprot.dat.gz')
+            cmd = ["rm", "data/uniprot_sprot.dat.gz"]
+            proc = subprocess.run(cmd)
+            wget.download(urlSwiss, out ='data/uniprot_sprot.dat.gz')
 
             cmd = ["mv", 'data/swissprot.pkl', 'data/old_swissprot.pkl']
             proc = subprocess.run(cmd)

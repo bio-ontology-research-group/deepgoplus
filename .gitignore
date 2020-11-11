@@ -110,6 +110,8 @@ data-*/
 data.tar.gz
 deepwalk
 
+results/
+
 *.pkl
 *.pdf
 *.out

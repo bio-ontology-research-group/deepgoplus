@@ -59,7 +59,7 @@ tf.config.set_soft_device_placement(True)
     '--batch-size', '-bs', default=32,
     help='Batch size')
 @ck.option(
-    '--epochs', '-e', default=1,
+    '--epochs', '-e', default=12,
     help='Training epochs')
 @ck.option(
     '--load', '-ld', is_flag=True, help='Load Model?')
@@ -269,7 +269,6 @@ class DFGenerator(Sequence):
                 if t_id in self.terms_dict:
                     labels[i, self.terms_dict[t_id]] = 1
         self.start += self.batch_size
-        print("GETITEM " + str(idx) + "\t\t" + str(len(self)))
         print(data_onehot, labels)
         return (data_onehot, labels)
     ###################

@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH --partition=batch
+#SBATCH -J deepGOPY2.7
+#SBATCH -o zcpfJob.%J.out
+#SBATCH -e zcpfJob.%J.err
+#SBATCH --mail-user=fernando.zhapacamacho@kaust.edu.sa
+#SBATCH --mail-type=ALL
+#SBATCH --time=05:00:00
+#SBATCH --mem=16G
+#SBATCH --gres=gpu:4
+#SBATCH --constraint=[gpu]
+
+
+
+#run the application:
+
+python deepgoplus.py
+

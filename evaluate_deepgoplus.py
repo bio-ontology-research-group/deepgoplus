@@ -49,7 +49,7 @@ def main(train_data_file, test_data_file, terms_file,
 
     train_df = pd.read_pickle(train_data_file)
     test_df = pd.read_pickle(test_data_file)
-    print(len(test_df))
+    print("Length of test set: " + str(len(test_df)))
     
     annotations = train_df['prop_annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
@@ -77,7 +77,7 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
-    print('Diamond preds')
+    #print('Diamond preds')
     for i, row in enumerate(test_df.itertuples()):
         annots = {}
         prot_id = row.proteins
@@ -145,7 +145,7 @@ def main(train_data_file, test_data_file, terms_file,
     #                 annots[a_id] = score
     #     deepgo_preds.append(annots)
 
-    print('Computing Fmax')
+    #print('Computing Fmax')
     fmax = 0.0
     tmax = 0.0
     precisions = []
@@ -153,7 +153,7 @@ def main(train_data_file, test_data_file, terms_file,
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(10, 30):
+    for t in range(1, 101): # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
@@ -173,7 +173,7 @@ def main(train_data_file, test_data_file, terms_file,
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, labels, preds)
         avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
         avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
-        print(f'{avg_fp} {avg_ic}')
+        #print(f'{avg_fp} {avg_ic}')
         precisions.append(prec)
         recalls.append(rec)
         # print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
@@ -182,7 +182,9 @@ def main(train_data_file, test_data_file, terms_file,
             tmax = threshold
         if smin > s:
             smin = s
-    print(f'Fmax: {fmax:0.3f}, Smin: {smin:0.3f}, threshold: {tmax}')
+    print(f'threshold: {tmax}')
+    print(f'Smin: {smin:0.3f}')
+    print(f'Fmax: {fmax:0.3f}')
     precisions = np.array(precisions)
     recalls = np.array(recalls)
     sorted_index = np.argsort(recalls)
