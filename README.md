@@ -14,7 +14,7 @@ To install python dependencies run:
 pip install -r requirements.txt
 
 ## Data
-* http://deepgoplus.bio2vec.net/data/ - Here you can find the data
+* https://deepgo.cbrc.kaust.edu.sa/data/ - Here you can find the data
 used to train and evaluate our method.
  * data.tar.gz - Data required to run predict.sh script
  * data-cafa.tar.gz - CAFA3 challenge dataset
@@ -31,11 +31,11 @@ database format to pandas dataframe.
 * evaluate_*.py - The scripts are used to compute Fmax, Smin and AUPR
 
 ## Running
-* Download all the files from http://deepgoplus.bio2vec.net/data/data.tar.gz and place them into data folder
+* Download all the files from https://deepgo.cbrc.kaust.edu.sa/data/data.tar.gz and place them into data folder
 * Install [diamond](https://github.com/bbuchfink/diamond) program on your system (diamond command should be available)
 * run predict.sh <input_fasta_filename> <results_filename>
 
-The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
+The online version of DeepGOPlus is available at http://deepgo.cbrc.kaust.edu.sa/
 
 ## Citation
 
