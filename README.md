@@ -16,7 +16,7 @@ performance.
 
 
 ## Data
-* https://deepgoplus.bio2vec.net/data/ - Here you can find the data
+* http://deepgoplus.bio2vec.net/data/ - Here you can find the data
 used to train and evaluate our method.
  * data.tar.gz - Data required to run predict.sh script
  * data-cafa.tar.gz - CAFA3 challenge dataset
