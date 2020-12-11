@@ -16,7 +16,7 @@ performance.
 
 
 ## Data
-* https://deepgo.cbrc.kaust.edu.sa/data/ - Here you can find the data
+* https://deepgoplus.bio2vec.net/data/ - Here you can find the data
 used to train and evaluate our method.
  * data.tar.gz - Data required to run predict.sh script
  * data-cafa.tar.gz - CAFA3 challenge dataset
@@ -40,7 +40,7 @@ database format to pandas dataframe.
 * deepgoplus.py - This script is used to train the model
 * evaluate_*.py - The scripts are used to compute Fmax, Smin and AUPR
 
-The online version of DeepGOPlus is available at http://deepgo.cbrc.kaust.edu.sa/
+The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 
 ## Citation
 
