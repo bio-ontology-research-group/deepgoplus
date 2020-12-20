@@ -61,7 +61,15 @@ def download_data():
 
             last_release_data["previous_date"] = last_release_date
             last_release_data["current_date"] = new_release_date
-        
+
+
+       	    ## Update version info
+            curr_version = last_release_data["version"].split('.')
+            prefix = curr_version[:-1]
+            suffix = curr_version[-1]
+            last_release_data["version"] = ".".join(prefix + [str(int(suffix)+1)])
+
+
             with open(last_release_metadata, 'w') as f:
                 json.dump(last_release_data, f)
       
@@ -89,10 +97,7 @@ def prepare_data():
 
 def train_data():
     #Trains the data by running deepgoplus.py
-
-    print(f'Sending job to IBEX...')
-
-    cmd = ["sbatch", "jobTrain"]
+    cmd = ["python", "deepgoplus.py"]
     proc = subprocess.run(cmd)
 
 def main():
