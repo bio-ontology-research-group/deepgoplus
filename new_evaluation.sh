@@ -1,3 +1,7 @@
+rm results/deepgoplus_mf.txt
+rm results/deepgoplus_bp.txt
+rm results/deepgoplus_cc.txt
+
 
 python diamond_data.py -df data/train_data.pkl -o data/train_data.fa 
 python diamond_data.py -df data/test_data.pkl -o data/test_data.fa 
