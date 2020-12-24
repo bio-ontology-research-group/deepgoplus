@@ -58,9 +58,6 @@ def download_data():
             proc = subprocess.run(cmd)
             wget.download(urlSwiss, out ='data/uniprot_sprot.dat.gz')
 
-            cmd = ["mv", 'data/swissprot.pkl', 'data/old_swissprot.pkl']
-            proc = subprocess.run(cmd)
-
             last_release_data["previous_date"] = last_release_date
             last_release_data["current_date"] = new_release_date
 
@@ -122,7 +119,7 @@ def compress_data():
     diamond_db="data/train_data.dmnd"
     model="data/model.h5"
     result_diamond="data/test_diamond.res"
-
+    predictions="data/predictions.pkl"
     train_pkl="data/train_data.pkl"
     train_fa="data/train_data.fa"
     test_pkl="data/test_data.pkl"
@@ -132,15 +129,15 @@ def compress_data():
 
     release="data/RELEASE.md"
 
-    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, train_pkl, train_fa, test_pkl, test_fa, terms, release]
+    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, predictions, train_pkl, train_fa, test_pkl, test_fa, terms, release]
     proc = subprocess.run(cmd)
 
-    return out_file
+    return out_file[5:]
 
 
 def metrics_from_files():
 
-    cmd = ['./new_evaluation.sh']
+    cmd = ["bash", "new_evaluation.sh"]
     proc = subprocess.run(cmd)
 
     mf = open('results/deepgoplus_mf.txt').readlines()
@@ -245,7 +242,7 @@ def upload_data(filename):
     
     
 
-    cmd = ["ssh", login_cmd, "/home/zhapacfp/bin/take_data_ontolinator " + filename]
+    cmd = ["ssh", login_cmd, "/home/zhapacfp/bin/take_data_ontolinator", filename]
     proc = subprocess.run(cmd)
 
 
@@ -258,14 +255,14 @@ def upload_data(filename):
 
 
 def main():
-    downloaded = download_data()
-    if downloaded:
-        prepare_data()
-        train_data()
+#    downloaded = download_data()
+#    if downloaded:
+#        prepare_data()
+#        train_data()
 
-        release_notes_file()
-        out_file_name = compress_data() #compress the data and return the name(string) of the file
-        upload_data(out_file_name)
+    release_notes_file()
+    out_file_name = compress_data() #compress the data and return the name(string) of the file
+    upload_data(out_file_name)
 
 if __name__ == "__main__":
     main()

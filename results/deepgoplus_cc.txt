@@ -1,5 +1,5 @@
-Length of test set: 603
+Length of test set: 7642
 threshold: 0.3
-Smin: 7.780
-Fmax: 0.698
-AUPR: 0.722
+Smin: 10.618
+Fmax: 0.677
+AUPR: 0.717

@@ -115,3 +115,4 @@ results/
 *.pkl
 *.pdf
 *.out
+cron.log

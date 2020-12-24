@@ -60,6 +60,7 @@ class Ontology(object):
                 min_n = n
             else:
                 min_n = min([cnt[x] for x in parents])
+
             self.ic[go_id] = math.log(min_n / n, 2)
     
     def get_ic(self, go_id):

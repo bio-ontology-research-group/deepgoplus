@@ -14,10 +14,7 @@ logging.basicConfig(level=logging.INFO)
     '--go-file', '-gf', default='data/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--old-data-file', '-oldf', default='data/old_swissprot.pkl',
-    help='Uniprot KB, generated with uni2pandas.py')
-@ck.option(
-    '--new-data-file', '-ndf', default='data/swissprot.pkl',
+    '--data-file', '-ndf', default='data/swissprot.pkl',
     help='Uniprot KB, generated with uni2pandas.py')
 @ck.option(
     '--out-terms-file', '-otf', default='data/terms.pkl',
@@ -31,13 +28,13 @@ logging.basicConfig(level=logging.INFO)
 @ck.option(
     '--min-count', '-mc', default=50,
     help='Minimum number of annotated proteins')
-def main(go_file, old_data_file, new_data_file,
+def main(go_file, data_file,
          out_terms_file, train_data_file, test_data_file, min_count):
     go = Ontology(go_file, with_rels=True)
     logging.info('GO loaded')
 
-    df = pd.read_pickle(old_data_file)
-    print("OLD DATA FILE" ,len(df))
+    df = pd.read_pickle(data_file)
+    print("DATA FILE" ,len(df))
     
     logging.info('Processing annotations')
     
@@ -47,13 +44,6 @@ def main(go_file, old_data_file, new_data_file,
         for term in row['prop_annotations']:
             cnt[term] += 1
     
-    train_prots = set()
-    for row in df.itertuples():
-        p_id = row.proteins
-        train_prots.add(p_id)
-
-    df.to_pickle(train_data_file)
-
     # Filter terms with annotations more than min_count
     res = {}
     for key, val in cnt.items():
@@ -70,24 +60,23 @@ def main(go_file, old_data_file, new_data_file,
     logging.info(f'Number of terms {len(terms)}')
     
     # Save the list of terms
-    df = pd.DataFrame({'terms': terms})
-    df.to_pickle(out_terms_file)
+    terms_df = pd.DataFrame({'terms': terms})
+    terms_df.to_pickle(out_terms_file)
 
-    # Save testing data
-    df = pd.read_pickle(new_data_file)
-    print("NEW DATA FILE" ,len(df))
-    
+    n = len(df)
+    # Split train/valid
+    index = np.arange(n)
+    train_n = int(n * 0.9)
+    np.random.seed(seed=0)
+    np.random.shuffle(index)
+    train_df = df.iloc[index[:train_n]]
+    test_df = df.iloc[index[train_n:]]
 
-    index = []
-    for i, row in enumerate(df.itertuples()):
-        p_id = row.proteins
-        if p_id not in train_prots:
-            print(i)
-            index.append(i)
-    df = df.iloc[index]
-    print('Number of test proteins', len(df))
-    df.to_pickle(test_data_file)
-                
+    print('Number of train proteins', len(train_df))
+    train_df.to_pickle(train_data_file)
+
+    print('Number of test proteins', len(test_df))
+    test_df.to_pickle(test_data_file)
 
 
 if __name__ == '__main__':
