@@ -66,7 +66,7 @@ def main(go_file, data_file,
     n = len(df)
     # Split train/valid
     index = np.arange(n)
-    train_n = int(n * 0.9)
+    train_n = int(n * 0.95)
     np.random.seed(seed=0)
     np.random.shuffle(index)
     train_df = df.iloc[index[:train_n]]
