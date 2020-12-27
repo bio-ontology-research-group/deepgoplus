@@ -128,8 +128,9 @@ def compress_data():
     terms="data/terms.pkl"
 
     release="data/RELEASE.md"
+    release_html="data/RELEASE.html"
 
-    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, predictions, train_pkl, train_fa, test_pkl, test_fa, terms, release]
+    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, predictions, train_pkl, train_fa, test_pkl, test_fa, terms, release, release_html]
     proc = subprocess.run(cmd)
 
     return out_file[5:]
