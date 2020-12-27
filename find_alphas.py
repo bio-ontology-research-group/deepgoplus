@@ -114,6 +114,8 @@ def main(train_data_file, test_data_file, terms_file,
     with open(last_release_metadata, 'r') as f:
             last_release_data = json.load(f)
             last_release_data['alphas'][ont] = find_alpha(ont, test_df, blast_preds, go_rels, terms)
+            json.dump(last_release_data, f)
+
 
         
 
