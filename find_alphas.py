@@ -18,7 +18,7 @@ from evaluate_deepgoplus import compute_mcc, compute_roc, evaluate_annotations
 from matplotlib import pyplot as plt
 from joblib import Parallel, delayed
 import multiprocessing
-
+import json
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -39,6 +39,10 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
+
+
+
+
 
 
 def main(train_data_file, test_data_file, terms_file,
@@ -104,9 +108,14 @@ def main(train_data_file, test_data_file, terms_file,
                 annots[go_id] = score
         blast_preds.append(annots)
         
- 
+    
+    last_release_metadata = 'metadata/last_release.json' 
 
-    find_alpha(ont, test_df, blast_preds, go_rels, terms)
+    with open(last_release_metadata, 'r') as f:
+            last_release_data = json.load(f)
+            last_release_data['alphas'][ont] = find_alpha(ont, test_df, blast_preds, go_rels, terms)
+
+        
 
 
 
@@ -205,7 +214,9 @@ def find_alpha(ont, test_df, blast_preds, go_rels, terms):
 
     results = Parallel(n_jobs=num_cores)(delayed(eval_alphas)(i/100, *extra) for i in inputs)
 
-    print(results)
+    chosen =  min(results, key=lambda x: x[1])
+    
+    return chosen[0]
 
 
 
@@ -213,4 +224,10 @@ def find_alpha(ont, test_df, blast_preds, go_rels, terms):
 #####################################################################################
 
 if __name__ == '__main__':
+
+    alphas = {'mf': 0, 'bp': 0, 'cc': 0}
+
+    
+
+
     main()

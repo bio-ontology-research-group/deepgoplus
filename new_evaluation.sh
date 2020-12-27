@@ -13,6 +13,10 @@ diamond blastp  -d data/train_data.dmnd --more-sensitive -t /tmp -q data/test_da
 
 
 
+python find_alphas.py -o mf
+python find_alphas.py -o bp
+python find_alphas.py -o cc
+
 mkdir -p results
 
 python evaluate_deepgoplus.py -o mf > results/deepgoplus_mf.txt #requires data/test_diamond.res

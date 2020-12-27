@@ -262,8 +262,8 @@ def main():
 #        train_data()
 
     release_notes_file()
-    out_file_name = compress_data() #compress the data and return the name(string) of the file
-    upload_data(out_file_name)
+#    out_file_name = compress_data() #compress the data and return the name(string) of the file
+#    upload_data(out_file_name)
 
 if __name__ == "__main__":
     main()

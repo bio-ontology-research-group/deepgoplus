@@ -15,6 +15,7 @@ from scipy import sparse
 import math
 from utils import FUNC_DICT, Ontology, NAMESPACES
 from matplotlib import pyplot as plt
+import json
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
@@ -41,7 +42,16 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont, alpha):
 
-    alpha /= 100.0
+    
+    
+    last_release_metadata = 'metadata/last_release.json' 
+    with open(last_release_metadata, 'r') as f:
+        last_release_data = json.load(f)
+        alpha = last_release_data['alphas'][ont]
+
+
+
+
     go_rels = Ontology('data/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
@@ -110,7 +120,9 @@ def main(train_data_file, test_data_file, terms_file,
     # print(len(go_set))
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
+    alphas = {NAMESPACES['mf']: 0, NAMESPACES['bp']: 0, NAMESPACES['cc']: 0}
+    alphas[NAMESPACES[ont]] = alpha
+
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
