@@ -14,6 +14,7 @@ from scipy.spatial import distance
 from scipy import sparse
 import math
 from utils import FUNC_DICT, Ontology, NAMESPACES
+from evaluate_deepgoplus import compute_mcc, compute_roc, evaluate_annotations
 from matplotlib import pyplot as plt
 from joblib import Parallel, delayed
 import multiprocessing
@@ -108,58 +109,7 @@ def main(train_data_file, test_data_file, terms_file,
     find_alpha(ont, test_df, blast_preds, go_rels, terms)
 
 
-def compute_roc(labels, preds):
-    # Compute ROC curve and ROC area for each class
-    fpr, tpr, _ = roc_curve(labels.flatten(), preds.flatten())
-    roc_auc = auc(fpr, tpr)
-    return roc_auc
 
-def compute_mcc(labels, preds):
-    # Compute ROC curve and ROC area for each class
-    mcc = matthews_corrcoef(labels.flatten(), preds.flatten())
-    return mcc
-
-def evaluate_annotations(go, real_annots, pred_annots):
-    total = 0
-    p = 0.0
-    r = 0.0
-    p_total= 0
-    ru = 0.0
-    mi = 0.0
-    fps = []
-    fns = []
-    for i in range(len(real_annots)):
-        if len(real_annots[i]) == 0:
-            continue
-        tp = set(real_annots[i]).intersection(set(pred_annots[i]))
-        fp = pred_annots[i] - tp
-        fn = real_annots[i] - tp
-        for go_id in fp:
-            mi += go.get_ic(go_id)
-        for go_id in fn:
-            ru += go.get_ic(go_id)
-        fps.append(fp)
-        fns.append(fn)
-        tpn = len(tp)
-        fpn = len(fp)
-        fnn = len(fn)
-        total += 1
-        recall = tpn / (1.0 * (tpn + fnn))
-        r += recall
-        if len(pred_annots[i]) > 0:
-            p_total += 1
-            precision = tpn / (1.0 * (tpn + fpn))
-            p += precision
-    ru /= total
-    mi /= total
-    r /= total
-    if p_total > 0:
-        p /= p_total
-    f = 0.0
-    if p + r > 0:
-        f = 2 * p * r / (p + r)
-    s = math.sqrt(ru * ru + mi * mi)
-    return f, p, r, s, ru, mi, fps, fns
 
 
 ################ GENETIC ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
@@ -248,12 +198,12 @@ def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
 
 def find_alpha(ont, test_df, blast_preds, go_rels, terms):
 
-    extra = [test_df, blast_preds, go_rels, terms]
-    inputs = range(0.45, 0.75, 0.01)
+    extra = [ont, test_df, blast_preds, go_rels, terms]
+    inputs = range(45, 75, 1)
 
     num_cores = 30
 
-    results = Parallel(n_jobs=num_cores)(delayed(eval_alphas)(i, *extra) for i in inputs)
+    results = Parallel(n_jobs=num_cores)(delayed(eval_alphas)(i/100, *extra) for i in inputs)
 
     print(results)
 
