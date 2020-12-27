@@ -66,6 +66,9 @@ def main(train_data_file, test_data_file, terms_file,
     for i, row in enumerate(train_df.itertuples()):
         prot_index[row.proteins] = i
 
+    # DeepGOPlus
+    go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
+    go_set.remove(FUNC_DICT[ont])
     
     # BLAST Similarity (Diamond)
     diamond_scores = {}
@@ -99,25 +102,24 @@ def main(train_data_file, test_data_file, terms_file,
                 sim[j] = s / total_score
             ind = np.argsort(-sim)
             for go_id, score in zip(allgos, sim):
-                annots[go_id] = score
+                if go_id in go_set:
+                    annots[go_id] = score
         blast_preds.append(annots)
         
-    # DeepGOPlus
-    go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
-    go_set.remove(FUNC_DICT[ont])
     labels = test_df['prop_annotations'].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
     # print(len(go_set))
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
+    # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.58, NAMESPACES['cc']: 0.45}
+    # alphas[NAMESPACES[ont]: alpha]
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
-            annots_dict[go_id] *= alphas[go_rels.get_namespace(go_id)]
+            annots_dict[go_id] *= alpha
         for j, score in enumerate(row.preds):
             go_id = terms[j]
-            score *= 1 - alphas[go_rels.get_namespace(go_id)]
+            score *= 1 - alpha
             if go_id in annots_dict:
                 annots_dict[go_id] += score
             else:
