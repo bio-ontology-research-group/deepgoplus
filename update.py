@@ -130,7 +130,10 @@ def compress_data():
     release="data/RELEASE.md"
     release_html="data/RELEASE.html"
 
-    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, predictions, train_pkl, train_fa, test_pkl, test_fa, terms, release, release_html]
+    metadata = "metadata/last_release.json"
+
+
+    cmd = ["tar", "-czf", out_file, go_file, diamond_db, model, result_diamond, predictions, train_pkl, train_fa, test_pkl, test_fa, terms, release, release_html, metadata]
     proc = subprocess.run(cmd)
 
     return out_file[5:]
@@ -256,14 +259,14 @@ def upload_data(filename):
 
 
 def main():
-#    downloaded = download_data()
-#    if downloaded:
-#        prepare_data()
-#        train_data()
+    downloaded = download_data()
+    if downloaded:
+        prepare_data()
+        train_data()
 
     release_notes_file()
-#    out_file_name = compress_data() #compress the data and return the name(string) of the file
-#    upload_data(out_file_name)
+    out_file_name = compress_data() #compress the data and return the name(string) of the file
+    upload_data(out_file_name)
 
 if __name__ == "__main__":
     main()

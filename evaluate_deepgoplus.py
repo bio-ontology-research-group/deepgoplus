@@ -121,7 +121,11 @@ def main(train_data_file, test_data_file, terms_file,
     deep_preds = []
     # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
     alphas = {NAMESPACES['mf']: 0, NAMESPACES['bp']: 0, NAMESPACES['cc']: 0}
-    alphas[NAMESPACES[ont]] = alpha
+
+    with open(last_release_metadata, 'r') as f:
+        last_release_data = json.load(f)
+        alpha = last_release_data["alphas"][ont]
+        alphas[NAMESPACES[ont]] = alpha
 
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
