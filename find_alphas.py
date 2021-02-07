@@ -126,7 +126,7 @@ def main(train_data_file, test_data_file, terms_file,
 
 
 
-################ GENETIC ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
+################ ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
 
 def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
 
