@@ -41,7 +41,7 @@ def download_data():
             print(f'There are not new releases\nAborting...')
             new_release = False
         else:
-            print(f'SwissProt release version ' + new_release_version + 'found...')
+            print(f'SwissProt release version ' + new_release_version + ' found...')
 
             print(f'Proceeding to download Gene Ontology file go.obo from http://purl.obolibrary.org/obo/go.obo')
             urlGO = 'http://purl.obolibrary.org/obo/go.obo'
