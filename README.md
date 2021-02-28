@@ -40,7 +40,6 @@ database format to pandas dataframe.
 * deepgoplus.py - This script is used to train the model
 * evaluate_*.py - The scripts are used to compute Fmax, Smin and AUPR
 
-
 The online version of DeepGOPlus is available at http://deepgoplus.bio2vec.net/
 
 ## Citation

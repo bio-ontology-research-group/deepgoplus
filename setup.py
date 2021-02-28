@@ -16,8 +16,8 @@ except ImportError:
     tagger = egg_info_cmd.egg_info
 
 install_requires = [
-    "click < 8", "scikit-learn < 0.21", "pandas < 0.24", "tensorflow < 1.13",
-    "numpy < 2.0", "scipy < 1.3" 
+    "click < 8", "sklearn", "pandas", "tensorflow < 2.4",
+    "numpy < 2.0", "scipy" 
 ]
 
 needs_pytest = {"pytest", "test", "ptr"}.intersection(sys.argv)
@@ -31,7 +31,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Maxat Kulmanov",
     author_email="maxat.kulmanov@kaust.edu.sa",
-    download_url="https://github.com/bio-ontology-research-group/deepgoplus/archive/v1.0.0.tar.gz",
+    download_url="https://github.com/bio-ontology-research-group/deepgoplus/archive/v1.0.1.tar.gz",
     license="Apache 2.0",
     packages=["deepgoplus",],
     package_data={"deepgoplus": [],},
@@ -46,5 +46,5 @@ setup(
     },
     zip_safe=True,
     cmdclass={"egg_info": tagger},
-    python_requires=">=3.6, <3.7",
+    python_requires=">=3.7, <3.8",
 )
