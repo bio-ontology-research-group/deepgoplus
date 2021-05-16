@@ -40,11 +40,6 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
 
-
-
-
-
-
 def main(train_data_file, test_data_file, terms_file,
          diamond_scores_file, ont):
 
@@ -108,7 +103,6 @@ def main(train_data_file, test_data_file, terms_file,
                 annots[go_id] = score
         blast_preds.append(annots)
         
-    
     last_release_metadata = 'metadata/last_release.json' 
 
     with open(last_release_metadata, 'r') as f:
@@ -119,18 +113,9 @@ def main(train_data_file, test_data_file, terms_file,
     with open(last_release_metadata, 'w') as f:
         json.dump(last_release_data, f)
 
-
-        
-
-
-
-
-
-################ GENETIC ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
+################ ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
 
 def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
-
-
     deep_preds = []
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])
@@ -207,9 +192,6 @@ def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
 
     return alpha, np.sum([smin, -fmax, -aupr])
 
-
-
-
 def find_alpha(ont, test_df, blast_preds, go_rels, terms):
 
     extra = [ont, test_df, blast_preds, go_rels, terms]
@@ -222,17 +204,9 @@ def find_alpha(ont, test_df, blast_preds, go_rels, terms):
     chosen =  min(results, key=lambda x: x[1])
     
     return chosen[0]
-
-
-
-
 #####################################################################################
 
 if __name__ == '__main__':
 
     alphas = {'mf': 0, 'bp': 0, 'cc': 0}
-
-    
-
-
     main()

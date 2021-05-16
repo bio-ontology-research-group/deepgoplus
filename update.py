@@ -29,19 +29,19 @@ def download_data():
         with open(last_release_metadata, 'r') as f:
             last_release_data = json.load(f)
         
-        last_release_date = last_release_data["current_date"]
+        last_release_version = last_release_data["current_uniprot_version"]
 
         print(f'Checking new release date...')
 
-        response = requests.get('https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/reldate.txt')
+        response = requests.get('https://www.uniprot.org')
 
-        new_release_date = response.headers['Last-Modified']
-
-        if last_release_date == new_release_date:
+        new_release_version = response.headers['X-UniProt-Release']
+        
+        if last_release_version == new_release_version:
             print(f'There are not new releases\nAborting...')
             new_release = False
         else:
-            print(f'There was a new release of SwissProt file on ' + new_release_date)
+            print(f'SwissProt release version ' + new_release_version + ' found...')
 
             print(f'Proceeding to download Gene Ontology file go.obo from http://purl.obolibrary.org/obo/go.obo')
             urlGO = 'http://purl.obolibrary.org/obo/go.obo'
@@ -58,8 +58,7 @@ def download_data():
             proc = subprocess.run(cmd)
             wget.download(urlSwiss, out ='data/uniprot_sprot.dat.gz')
 
-            last_release_data["previous_date"] = last_release_date
-            last_release_data["current_date"] = new_release_date
+            last_release_data["current_uniprot_version"] = new_release_version
 
 
        	    ## Update version info
@@ -178,7 +177,7 @@ def release_notes_file():
 
     go_file.readline()
     go_date =  str(datetime.strptime(go_file.readline().rstrip('\n').split('/')[1], '%Y-%m-%d').date())
-    swissprot_date = str(datetime.strptime(last_release_data["current_date"], '%a, %d %b %Y %H:%M:%S GMT').date())
+    swissprot_version = last_release_data["current_uniprot_version"]
 
    
     text_md = """
@@ -188,7 +187,7 @@ protein sequences using deep neural networks combined with sequence
 similarity based predictions.
 # Release information
 Current version is """ + version + """. The model in the current release was trained using the Gene Ontology
-released on """ + go_date + """ and the SwissProt data released on """ + swissprot_date+  """.
+released on """ + go_date + """ and the SwissProt data with version """ + swissprot_version +  """.
 The obtained results are the following:
 For MFO:
     Fmax:   """ + mf_fmax +"""
@@ -209,7 +208,7 @@ For more information about the project, please look at https://github.com/bio-on
     
 <p>
 The current version release is """ + version + """. The model in the current release was trained using the Gene Ontology
-released on """ + go_date + """ and the SwissProt data released on """ + swissprot_date +""".
+# released on """ + go_date + """ and the SwissProt data released on """ + swissprot_version +""".
 </p>
 
 <p>
