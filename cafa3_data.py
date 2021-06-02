@@ -11,28 +11,28 @@ logging.basicConfig(level=logging.INFO)
 
 @ck.command()
 @ck.option(
-    '--go-file', '-gf', default='data/go.obo',
+    '--go-file', '-gf', default='data-cafa3/go.obo',
     help='Gene Ontology file in OBO Format')
 @ck.option(
-    '--train-sequences-file', '-trsf', default='data/CAFA3_training_data/uniprot_sprot_exp.fasta',
+    '--train-sequences-file', '-trsf', default='data-cafa3/CAFA3_training_data/uniprot_sprot_exp.fasta',
     help='CAFA training sequences fasta')
 @ck.option(
-    '--train-annotations-file', '-traf', default='data/CAFA3_training_data/uniprot_sprot_exp.txt',
+    '--train-annotations-file', '-traf', default='data-cafa3/CAFA3_training_data/uniprot_sprot_exp.txt',
     help='CAFA training annotations fasta')
 @ck.option(
-    '--test-sequences-file', '-tssf', default='data/CAFA3_targets/targets_all.fasta',
+    '--test-sequences-file', '-tssf', default='data-cafa3/CAFA3_targets/targets_all.fasta',
     help='CAFA training annotations fasta')
 @ck.option(
-    '--test-annotations-file', '-tsaf', default='data/benchmark20171115/groundtruth/leafonly_all.txt',
+    '--test-annotations-file', '-tsaf', default='data-cafa3/benchmark20171115/groundtruth/leafonly_all.txt',
     help='CAFA training annotations fasta')
 @ck.option(
-    '--out-terms-file', '-otf', default='data/terms.pkl',
+    '--out-terms-file', '-otf', default='data-cafa3/terms.pkl',
     help='Result file with a list of terms for prediction task')
 @ck.option(
-    '--train-data-file', '-trdf', default='data/train_data.pkl',
+    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
     help='Result file with a list of terms for prediction task')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data/test_data.pkl',
+    '--test-data-file', '-tsdf', default='data-cafa3/test_data.pkl',
     help='Result file with a list of terms for prediction task')
 @ck.option(
     '--min-count', '-mc', default=50,
