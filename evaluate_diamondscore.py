@@ -45,11 +45,11 @@ def main(train_data_file, test_data_file, diamond_scores_file, ont):
     go_rels = Ontology('data/go.obo', with_rels=True)
     
     train_df = pd.read_pickle(train_data_file)
-    annotations = train_df['annotations'].values
+    annotations = train_df['prop_annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
 
     test_df = pd.read_pickle(test_data_file)
-    test_annotations = test_df['annotations'].values
+    test_annotations = test_df['prop_annotations'].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
     go_rels.calculate_ic(annotations + test_annotations)
 

@@ -48,12 +48,12 @@ def main(train_data_file, test_data_file, diamond_scores_file, ont):
     terms_dict = {v: i for i, v in enumerate(terms)}
 
     train_df = pd.read_pickle(train_data_file)
-    annotations = train_df['annotations'].values
+    annotations = train_df['prop_annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
 
     test_df = pd.read_pickle(test_data_file)
     # Annotations
-    test_annotations = test_df['annotations'].values
+    test_annotations = test_df['prop_annotations'].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
 
     go_rels.calculate_ic(annotations + test_annotations)
