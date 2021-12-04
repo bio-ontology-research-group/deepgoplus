@@ -29,7 +29,7 @@ MAXLEN = 2000
 @ck.option('--chunk-size', '-cs', default=1000, help='Number of sequences to read at a time')
 @ck.option('--threshold', '-t', default=0.1, help='Prediction threshold')
 @ck.option('--batch-size', '-bs', default=32, help='Batch size for prediction model')
-@ck.option('--alpha', '-a', default=0.5, help='Alpha weight parameter')
+@ck.option('--alpha', '-a', default="0.55, 0.59, 0.46", help='Alpha weight parameter')
 def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotations_file,
          diamond_db, diamond_file, chunk_size, threshold, batch_size, alpha):
     # Check data folder and required files
@@ -109,7 +109,8 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     # Load CNN model
     model = load_model(model_file)
     # Alphas for the latest model
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    alpha = alpha.split(',')
+    alphas = {NAMESPACES['mf']: float(alpha[0]), NAMESPACES['bp']: float(alpha[1]), NAMESPACES['cc']: float(alpha[2])}
     # Alphas for the cafa2 model
     # alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
     
