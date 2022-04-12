@@ -14,24 +14,20 @@ from scipy.spatial import distance
 from scipy import sparse
 import math
 from utils import FUNC_DICT, Ontology, NAMESPACES
-from evaluate_deepgoplus import compute_mcc, compute_roc, evaluate_annotations
 from matplotlib import pyplot as plt
-from joblib import Parallel, delayed
-import multiprocessing
-import json
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
 
 @ck.command()
 @ck.option(
-    '--train-data-file', '-trdf', default='data/train_data.pkl',
+    '--train-data-file', '-trdf', default='data-cafa3/train_data.pkl',
     help='Data file with training features')
 @ck.option(
-    '--test-data-file', '-tsdf', default='data/predictions.pkl',
+    '--test-data-file', '-tsdf', default='data-cafa3/predictions.pkl',
     help='Test data file')
 @ck.option(
-    '--terms-file', '-tf', default='data/terms.pkl',
+    '--terms-file', '-tf', default='data-cafa3/terms.pkl',
     help='Data file with sequences and complete set of annotations')
 @ck.option(
     '--diamond-scores-file', '-dsf', default='data/test_diamond.res',
@@ -39,22 +35,24 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
-
+@ck.option(
+    '--alpha', '-a', default=50,
+    help='Alpha for for combining scores')
 def main(train_data_file, test_data_file, terms_file,
-         diamond_scores_file, ont):
+         diamond_scores_file, ont, alpha):
 
-    go_rels = Ontology('data/go.obo', with_rels=True)
+    alpha /= 100.0
+    go_rels = Ontology('data-cafa3/go.obo', with_rels=True)
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
     terms_dict = {v: i for i, v in enumerate(terms)}
 
     train_df = pd.read_pickle(train_data_file)
     test_df = pd.read_pickle(test_data_file)
-    print("Length of test set: " + str(len(test_df)))
-    
-    annotations = train_df['prop_annotations'].values
+    annotations = train_df['annotations'].values
+    print(annotations[:10])
     annotations = list(map(lambda x: set(x), annotations))
-    test_annotations = test_df['prop_annotations'].values
+    test_annotations = test_df['annotations'].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
     go_rels.calculate_ic(annotations + test_annotations)
 
@@ -78,7 +76,6 @@ def main(train_data_file, test_data_file, terms_file,
             diamond_scores[it[0]][it[1]] = float(it[2])
 
     blast_preds = []
-    #print('Diamond preds')
     for i, row in enumerate(test_df.itertuples()):
         annots = {}
         prot_id = row.proteins
@@ -103,29 +100,15 @@ def main(train_data_file, test_data_file, terms_file,
                 annots[go_id] = score
         blast_preds.append(annots)
         
-    last_release_metadata = 'metadata/last_release.json' 
-
-    with open(last_release_metadata, 'r') as f:
-            last_release_data = json.load(f)
-           
-    last_release_data['alphas'][ont] = find_alpha(ont, test_df, blast_preds, go_rels, terms)
-           
-    with open(last_release_metadata, 'w') as f:
-        json.dump(last_release_data, f)
-
-################ ALGORITHM TO FIND BEST ALPHAS PARAMETER ##################################
-
-def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
-    deep_preds = []
+    # DeepGOPlus
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])
-    
-    labels = test_df['prop_annotations'].values
+    labels = test_df['annotations'].values
     labels = list(map(lambda x: set(filter(lambda y: y in go_set, x)), labels))
-
-    alphas = {NAMESPACES['mf']: 0, NAMESPACES['bp']: 0, NAMESPACES['cc']: 0}
-    alphas[NAMESPACES[ont]] = alpha    
-
+    # print(len(go_set))
+    deep_preds = []
+    # alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
     for i, row in enumerate(test_df.itertuples()):
         annots_dict = blast_preds[i].copy()
         for go_id in annots_dict:
@@ -138,7 +121,28 @@ def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
             else:
                 annots_dict[go_id] = score
         deep_preds.append(annots_dict)
+    # print('AUTHOR DeepGOPlus')
+    # print('MODEL 1')
+    # print('KEYWORDS sequence alignment.')
+    # for i, row in enumerate(test_df.itertuples()):
+    #     prot_id = row.proteins
+    #     for go_id, score in deep_preds[i].items():
+    #         print(f'{prot_id}\t{go_id}\t{score:.2f}')
+    # print('END')
+    # return
 
+    # Propagate scores
+    # deepgo_preds = []
+    # for annots_dict in deep_preds:
+    #     annots = {}
+    #     for go_id, score in annots_dict.items():
+    #         for a_id in go_rels.get_anchestors(go_id):
+    #             if a_id in annots:
+    #                 annots[a_id] = max(annots[a_id], score)
+    #             else:
+    #                 annots[a_id] = score
+    #     deepgo_preds.append(annots)
+    
     fmax = 0.0
     tmax = 0.0
     precisions = []
@@ -146,7 +150,7 @@ def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(1, 101): # the range in this loop has influence in the AUPR output
+    for t in range(0, 101):
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
@@ -166,47 +170,90 @@ def eval_alphas(alpha, ont, test_df, blast_preds, go_rels, terms):
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, labels, preds)
         avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
         avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
-        #print(f'{avg_fp} {avg_ic}')
+        print(f'{avg_fp} {avg_ic}')
         precisions.append(prec)
         recalls.append(rec)
-        # print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
+        print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
         if fmax < fscore:
             fmax = fscore
             tmax = threshold
         if smin > s:
             smin = s
-
+    print(f'Fmax: {fmax:0.3f}, Smin: {smin:0.3f}, threshold: {tmax}')
     precisions = np.array(precisions)
     recalls = np.array(recalls)
     sorted_index = np.argsort(recalls)
     recalls = recalls[sorted_index]
     precisions = precisions[sorted_index]
     aupr = np.trapz(precisions, recalls)
+    print(f'AUPR: {aupr:0.3f}')
+    plt.figure()
+    lw = 2
+    plt.plot(recalls, precisions, color='darkorange',
+             lw=lw, label=f'AUPR curve (area = {aupr:0.2f})')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Area Under the Precision-Recall curve')
+    plt.legend(loc="lower right")
+    plt.savefig(f'aupr_{ont}_{alpha:0.2f}.pdf')
+    df = pd.DataFrame({'precisions': precisions, 'recalls': recalls})
+    df.to_pickle(f'PR_{ont}_{alpha:0.2f}.pkl')
 
-    if ont == 'mf':
-        smin /= 15
-    elif ont == 'bp':
-        smin /= 40
-    elif ont == 'cc':
-        smin /= 10
+def compute_roc(labels, preds):
+    # Compute ROC curve and ROC area for each class
+    fpr, tpr, _ = roc_curve(labels.flatten(), preds.flatten())
+    roc_auc = auc(fpr, tpr)
+    return roc_auc
 
-    return alpha, np.sum([smin, -fmax, -aupr])
+def compute_mcc(labels, preds):
+    # Compute ROC curve and ROC area for each class
+    mcc = matthews_corrcoef(labels.flatten(), preds.flatten())
+    return mcc
 
-def find_alpha(ont, test_df, blast_preds, go_rels, terms):
+def evaluate_annotations(go, real_annots, pred_annots):
+    total = 0
+    p = 0.0
+    r = 0.0
+    p_total= 0
+    ru = 0.0
+    mi = 0.0
+    fps = []
+    fns = []
+    for i in range(len(real_annots)):
+        if len(real_annots[i]) == 0:
+            continue
+        tp = set(real_annots[i]).intersection(set(pred_annots[i]))
+        fp = pred_annots[i] - tp
+        fn = real_annots[i] - tp
+        for go_id in fp:
+            mi += go.get_ic(go_id)
+        for go_id in fn:
+            ru += go.get_ic(go_id)
+        fps.append(fp)
+        fns.append(fn)
+        tpn = len(tp)
+        fpn = len(fp)
+        fnn = len(fn)
+        total += 1
+        recall = tpn / (1.0 * (tpn + fnn))
+        r += recall
+        if len(pred_annots[i]) > 0:
+            p_total += 1
+            precision = tpn / (1.0 * (tpn + fpn))
+            p += precision
+    ru /= total
+    mi /= total
+    r /= total
+    if p_total > 0:
+        p /= p_total
+    f = 0.0
+    if p + r > 0:
+        f = 2 * p * r / (p + r)
+    s = math.sqrt(ru * ru + mi * mi)
+    return f, p, r, s, ru, mi, fps, fns
 
-    extra = [ont, test_df, blast_preds, go_rels, terms]
-    inputs = range(45, 75, 1)
-
-    num_cores = 30
-
-    results = Parallel(n_jobs=num_cores)(delayed(eval_alphas)(i/100, *extra) for i in inputs)
-
-    chosen =  min(results, key=lambda x: x[1])
-    
-    return chosen[0]
-#####################################################################################
 
 if __name__ == '__main__':
-
-    alphas = {'mf': 0, 'bp': 0, 'cc': 0}
     main()

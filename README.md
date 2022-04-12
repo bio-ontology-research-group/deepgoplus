@@ -9,7 +9,7 @@ DeepGOPlus model together with the scripts for evaluating the model's
 performance.
 
 ## Dependencies
-* The code was developed and tested using python 3.6.
+* The code was developed and tested using python 3.7.
 * To install python dependencies run:
   `pip install -r requirements.txt`
 * Install [diamond](https://github.com/bbuchfink/diamond) program on your system (diamond command should be available)

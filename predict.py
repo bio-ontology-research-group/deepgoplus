@@ -117,7 +117,7 @@ def main(in_file, out_file, go_file, model_file, terms_file, annotations_file,
             sannots = sorted(annots.items(), key=lambda x: x[1], reverse=True)
             for go_id, score in sannots:
                 if score >= threshold:
-                    w.write(prot_id + '\t' + go_id + '\t' + go.get_term(go_id)['name'] + '\t%.2f' % go.get_ic(go_id) + '\t%.3f\n' % score)
+                    w.write(prot_id + '\t' + go_id + '\t' + go.get_namespace(go_id) + '\t' + go.get_term(go_id)['name'] + '\t%.2f' % go.get_ic(go_id) + '\t%.3f\n' % score)
             w.write('\n')
     w.close()
     total_time = time.time() - start_time

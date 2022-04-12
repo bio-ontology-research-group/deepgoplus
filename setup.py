@@ -25,7 +25,7 @@ pytest_runner = ["pytest < 6", "pytest-runner < 5"] if needs_pytest else []
 
 setup(
     name="deepgoplus",
-    version="1.0.0",
+    version="1.0.1",
     description="DeepGOPlus function predictor",
     long_description=open(README).read(),
     long_description_content_type="text/markdown",
