@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
+import pickle
 import numpy as np
 import pandas as pd
 import click as ck
-from tensorflow.keras.models import Sequential, Model, load_model
-from tensorflow.keras.layers import (
-    Dense, Dropout, Activation, Input, Reshape,
-    Flatten, BatchNormalization, Embedding,
-    Conv1D, MaxPooling1D, Add, Concatenate)
-from tensorflow.keras.optimizers import Adam, RMSprop, Adadelta, SGD
+# from tensorflow.keras.models import Sequential, Model, load_model
+# from tensorflow.keras.layers import (
+#     Dense, Dropout, Activation, Input, Reshape,
+#     Flatten, BatchNormalization, Embedding,
+#     Conv1D, MaxPooling1D, Add, Concatenate)
+# from tensorflow.keras.optimizers import Adam, RMSprop, Adadelta, SGD
 from sklearn.metrics import classification_report
 from sklearn.metrics.pairwise import cosine_similarity
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+# from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import sys
 from collections import deque
 import time
 import logging
-import tensorflow as tf
+# import tensorflow as tf
 from sklearn.metrics import roc_curve, auc, matthews_corrcoef
 from scipy.spatial import distance
 from scipy import sparse
@@ -40,15 +41,26 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 @ck.option(
     '--ont', '-o', default='mf',
     help='GO subontology (bp, mf, cc)')
-def main(train_data_file, test_data_file, diamond_scores_file, ont):
+@ck.option(
+    '--go-file', '-gf', default='data/go.obo',
+    help='Gene Ontology file in OBO Format')
+@ck.option(
+    '--saving-pred', '-s',
+)
+def main(train_data_file, test_data_file, diamond_scores_file, ont, go_file,
+         saving_pred):
 
-    go_rels = Ontology('data/go.obo', with_rels=True)
+    go_rels = Ontology(go_file, with_rels=True)
     
-    train_df = pd.read_pickle(train_data_file)
+    # train_df = pd.read_pickle(train_data_file)
+    with open(train_data_file, "rb") as h:
+        train_df = pickle.load(h)
     annotations = train_df['prop_annotations'].values
     annotations = list(map(lambda x: set(x), annotations))
 
-    test_df = pd.read_pickle(test_data_file)
+    # test_df = pd.read_pickle(test_data_file)
+    with open(test_data_file, "rb") as h:
+        test_df = pickle.load(h)
     test_annotations = test_df['prop_annotations'].values
     test_annotations = list(map(lambda x: set(x), test_annotations))
     go_rels.calculate_ic(annotations + test_annotations)
@@ -91,6 +103,9 @@ def main(train_data_file, test_data_file, diamond_scores_file, ont):
                 annots[go_id] = score
             
         blast_preds.append(annots)
+    
+    with open(saving_pred, "wb") as h:
+        pickle.dump(blast_preds, h)
         
     go_set = go_rels.get_namespace_terms(NAMESPACES[ont])
     go_set.remove(FUNC_DICT[ont])

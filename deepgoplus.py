@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+import json
 import click as ck
 import numpy as np
 import pandas as pd
@@ -104,11 +103,17 @@ def main(go_file, train_data_file, test_data_file, terms_file, model_file,
     print('Params:', params)
     
     go = Ontology(go_file, with_rels=True)
-    terms_df = pd.read_pickle(terms_file)
+    # terms_df = pd.read_pickle(terms_file)
+    terms_df = pd.read_json(terms_file)
+    # with open(terms_file, "r") as h:
+    #     terms_df = json.load(h)
     terms = terms_df['terms'].values.flatten()
     
     train_df, valid_df = load_data(train_data_file, terms, split)
-    test_df = pd.read_pickle(test_data_file)
+    # test_df = pd.read_pickle(test_data_file)
+    test_df = pd.read_json(test_data_file)
+    # with open(test_data_file, "rb") as h:
+        # test_df = pickle.load(h)
     terms_dict = {v: i for i, v in enumerate(terms)}
     nb_classes = len(terms)
     with tf.device('/' + device):
@@ -226,7 +231,10 @@ def create_model(nb_classes, params):
 
 
 def load_data(data_file, terms, split):
-    df = pd.read_pickle(data_file)
+    # df = pd.read_pickle(data_file)
+    df = pd.read_json(data_file)
+    # with open(data_file, "rb") as h:
+        # df = pickle.load(h)
     n = len(df)
     # Split train/valid
     n = len(df)
@@ -269,7 +277,7 @@ class DFGenerator(Sequence):
                 if t_id in self.terms_dict:
                     labels[i, self.terms_dict[t_id]] = 1
         self.start += self.batch_size
-        print(data_onehot, labels)
+        # print(data_onehot, labels)
         return (data_onehot, labels)
     ###################
 

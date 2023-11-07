@@ -105,6 +105,7 @@ venv2/
 .mypy_cache/
 
 # Data folder
+data*
 data/
 data-*/
 data.tar.gz
@@ -116,3 +117,5 @@ results/
 *.pdf
 *.out
 cron.log
+
+*.js # launch.js, etc.
