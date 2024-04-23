@@ -25,13 +25,13 @@ pytest_runner = ["pytest < 6", "pytest-runner < 5"] if needs_pytest else []
 
 setup(
     name="deepgoplus",
-    version="1.0.1",
+    version="1.0.2",
     description="DeepGOPlus function predictor",
     long_description=open(README).read(),
     long_description_content_type="text/markdown",
     author="Maxat Kulmanov",
     author_email="maxat.kulmanov@kaust.edu.sa",
-    download_url="https://github.com/bio-ontology-research-group/deepgoplus/archive/v1.0.1.tar.gz",
+    download_url="https://github.com/bio-ontology-research-group/deepgoplus/archive/v1.0.2.tar.gz",
     license="Apache 2.0",
     packages=["deepgoplus",],
     package_data={"deepgoplus": [],},
