@@ -13,6 +13,7 @@ import os
 import sys
 import logging
 import subprocess
+import json
 
 MAXLEN = 2000
 
@@ -62,11 +63,18 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     terms_df = pd.read_pickle(terms_file)
     terms = terms_df['terms'].values.flatten()
 
+    #Load alphas
+    with open(os.path.join(data_root, 'metadata/last_release.json')) as f:
+        metadata = json.load(f)
+        alphas = metadata['alphas']
+
+    
+    
     # Read known experimental annotations
     annotations = {}
     df = pd.read_pickle(annotations_file)
     for row in df.itertuples():
-        annotations[row.proteins] = set(row.exp_annotations)
+        annotations[row.proteins] = set(row.prop_annotations)
 
     # Generate diamond predictions
     cmd = [
@@ -109,7 +117,7 @@ def main(data_root, in_file, out_file, go_file, model_file, terms_file, annotati
     # Load CNN model
     model = load_model(model_file)
     # Alphas for the latest model
-    alphas = {NAMESPACES['mf']: 0.55, NAMESPACES['bp']: 0.59, NAMESPACES['cc']: 0.46}
+    alphas = {NAMESPACES['mf']: alphas["mf"], NAMESPACES['bp']: alphas["bp"], NAMESPACES['cc']: alphas["cc"]}
     # Alphas for the cafa2 model
     # alphas = {NAMESPACES['mf']: 0.63, NAMESPACES['bp']: 0.68, NAMESPACES['cc']: 0.48}
     
