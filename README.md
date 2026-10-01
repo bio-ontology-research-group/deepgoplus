@@ -16,7 +16,7 @@ performance.
 
 
 ## Data
-* http://deepgoplus.bio2vec.net/data/ - Here you can find the data
+* https://bio2vec.net/data/deepgo/ - Here you can find the data
 used to train and evaluate our method.
  * data.tar.gz - Data required to run predict.sh script
  * data-cafa.tar.gz - CAFA3 challenge dataset
@@ -27,7 +27,7 @@ used to train and evaluate our method.
 `pip install deepgoplus`
 
 ## Running
-* Download all the files from http://deepgoplus.bio2vec.net/data/data.tar.gz and place them into data folder
+* Download all the files from https://bio2vec.net/data/deepgo/data.tar.gz and place them into data folder
 * `deepgoplus --data-root <path_to_data_folder> --in-file <input_fasta_filename>`
 
 
